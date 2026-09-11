@@ -15,11 +15,12 @@ services:
     environment:
       - POSTGRES_USER=user_pg
       - POSTGRES_PASSWORD=password_pg
-      - POSTGRES_DB=dev
+      - POSTGRES_DB=prod
     ports:
       - "5437:5432"
     volumes:
       - prod_db_data:/var/lib/postgresql/data
+      - ./sql/production:/docker-entrypoint-initdb.d
   
   staging_db:
     image: registry.gitlab.com/dalibo/postgresql_anonymizer:stable
