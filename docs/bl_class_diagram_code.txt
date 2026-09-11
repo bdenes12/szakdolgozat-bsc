@@ -1,0 +1,177 @@
+@startuml
+title A tervezett szoftver üzleti logikájának osztálydiagramja
+
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+hide empty members
+
+package "Django ORM" {
+
+    class DataCategory <<DjangoModel>> {
+        +name: String
+        +description: String
+        +maximum_overlap: Decimal
+        +is_active: Boolean
+    }
+
+    class ColumnPolicy <<DjangoModel>> {
+        +schema_name: String
+        +table_name: String
+        +column_name: String
+        +target_environment: String
+        +quality_checks: JSON
+        +is_active: Boolean
+        +activate(): None
+        +deactivate(): None
+    }
+
+    class MaskingStrategy <<DjangoModel>> {
+        +name: String
+        +description: String
+        +parameters: JSON
+    }
+
+    class PipelineRun <<DjangoModel>> {
+        +status: String
+        +started_at: DateTime
+        +finished_at: DateTime
+        +error_message: String
+        +mark_completed(): None
+        +mark_failed(message: String): None
+    }
+
+    class ValidationRun <<DjangoModel>> {
+        +status: String
+        +started_at: DateTime
+        +finished_at: DateTime
+        +error_message: String
+        +mark_completed(): None
+        +mark_failed(message: String): None
+    }
+
+    class ValidationResult <<DjangoModel>> {
+        +schema_name: String
+        +table_name: String
+        +column_name: String
+        +check_type: String
+        +status: String
+        +metrics: JSON
+        +applied_thresholds: JSON
+        +message: String
+    }
+
+    class Alert <<DjangoModel>> {
+        +alert_type: String
+        +severity: String
+        +schema_name: String
+        +table_name: String
+        +column_name: String
+        +message: String
+        +is_resolved: Boolean
+        +created_at: DateTime
+        +resolved_at: DateTime
+        +resolve(): None
+    }
+}
+
+package "Python Services" {
+
+    class PolicyService <<PythonService>> {
+        +generate_suggestions(schema_metadata: Dictionary): List
+        +find_missing_policies(schema_metadata: Dictionary): List
+        +validate_policy(policy: ColumnPolicy): Boolean
+        +get_active_policies(environment: String): List
+    }
+
+    class PipelineService <<PythonService>> {
+        +start_pipeline(): PipelineRun
+        +transfer_to_staging(pipeline_run: PipelineRun): None
+        +transfer_to_development(pipeline_run: PipelineRun): None
+    }
+
+    class AnonymizationService <<PythonService>> {
+        +apply_policies(policies: List): None
+        +generate_security_labels(policies: List): List
+        +generate_export_views(policies: List): List
+    }
+
+    class ValidationService <<PythonService>> {
+        +run_validation(pipeline_run: PipelineRun): ValidationRun
+        +execute_checks(validation_run: ValidationRun): List
+        +save_results(validation_run: ValidationRun, check_results: List): List
+    }
+
+    class RowCountCheck <<PythonCheck>> {
+        +execute(): List
+    }
+
+    class ColumnTypeCheck <<PythonCheck>> {
+        +execute(): List
+    }
+
+    class ValueOverlapCheck <<PythonCheck>> {
+        +execute(policies: List): List
+        +calculate_overlap(production_values: List, development_values: List): Dictionary
+    }
+
+    class StatisticalQualityCheck <<PythonCheck>> {
+        +execute(policies: List): List
+        +compare_means(production_values: List, development_values: List): Dictionary
+        +compare_standard_deviations(production_values: List, development_values: List): Dictionary
+        +compare_distributions(production_values: List, development_values: List): Dictionary
+        +calculate_entropy(values: List): Decimal
+    }
+
+    class AlertService <<PythonService>> {
+        +create_alerts(validation_run: ValidationRun, results: List): List
+    }
+
+    class ReportingService <<PythonService>> {
+        +build_dashboard_data(): Dictionary
+        +build_report_data(validation_run: ValidationRun): Dictionary
+        +determine_validation_status(validation_run: ValidationRun): String
+    }
+}
+
+ColumnPolicy --> DataCategory
+ColumnPolicy --> MaskingStrategy
+
+ValidationRun --> PipelineRun
+ValidationRun *-- ValidationResult
+Alert --> ValidationRun
+Alert --> ValidationResult
+ValidationResult --> ColumnPolicy
+
+PolicyService ..> ColumnPolicy
+PolicyService ..> DataCategory
+
+PipelineService ..> PolicyService
+PipelineService ..> PipelineRun
+PipelineService ..> AnonymizationService
+PipelineService ..> ValidationService
+
+AnonymizationService ..> ColumnPolicy
+AnonymizationService ..> MaskingStrategy
+
+ValidationService ..> PolicyService
+ValidationService ..> ValidationRun
+ValidationService ..> ValidationResult
+ValidationService ..> RowCountCheck
+ValidationService ..> ColumnTypeCheck
+ValidationService ..> ValueOverlapCheck
+ValidationService ..> StatisticalQualityCheck
+ValidationService ..> AlertService
+
+AlertService ..> Alert
+AlertService ..> ValidationResult
+
+ReportingService ..> PipelineRun
+ReportingService ..> ValidationRun
+ReportingService ..> ValidationResult
+ReportingService ..> Alert
+
+@enduml

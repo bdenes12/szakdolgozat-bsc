@@ -1,0 +1,52 @@
+services:
+  admin_db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=denes_pg
+      - POSTGRES_PASSWORD=denes12
+      - POSTGRES_DB=admin_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - admin_db_data:/var/lib/postgresql/data
+
+  prod_db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=user_pg
+      - POSTGRES_PASSWORD=password_pg
+      - POSTGRES_DB=dev
+    ports:
+      - "5437:5432"
+    volumes:
+      - prod_db_data:/var/lib/postgresql/data
+  
+  staging_db:
+    image: registry.gitlab.com/dalibo/postgresql_anonymizer:stable
+    environment:
+      - POSTGRES_USER=user_pg
+      - POSTGRES_PASSWORD=password_pg
+      - POSTGRES_DB=staging
+    ports:
+      - "5435:5432"
+    volumes:
+      - staging_db_data:/var/lib/postgresql/data
+      - ./init_scripts:/docker-entrypoint-initdb.d
+
+  dev_db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=user_pg
+      - POSTGRES_PASSWORD=password_pg
+      - POSTGRES_DB=dev
+    ports:
+      - "5436:5432"
+    volumes:
+      - dev_db_data:/var/lib/postgresql/data
+      #- ./init_scripts:/docker-entrypoint-initdb.d
+
+volumes:
+  staging_db_data:
+  dev_db_data:
+  admin_db_data:
+  prod_db_data:
