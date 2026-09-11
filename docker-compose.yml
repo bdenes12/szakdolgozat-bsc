@@ -24,6 +24,7 @@ services:
   
   staging_db:
     image: registry.gitlab.com/dalibo/postgresql_anonymizer:stable
+    command: ["postgres", "-c", "shared_preload_libraries=anon"]
     environment:
       - POSTGRES_USER=user_pg
       - POSTGRES_PASSWORD=password_pg
@@ -32,7 +33,7 @@ services:
       - "5435:5432"
     volumes:
       - staging_db_data:/var/lib/postgresql/data
-      - ./init_scripts:/docker-entrypoint-initdb.d
+      - ./sql/staging:/docker-entrypoint-initdb.d
 
   dev_db:
     image: postgres:16
@@ -44,7 +45,6 @@ services:
       - "5436:5432"
     volumes:
       - dev_db_data:/var/lib/postgresql/data
-      #- ./init_scripts:/docker-entrypoint-initdb.d
 
 volumes:
   staging_db_data:
