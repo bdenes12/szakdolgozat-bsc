@@ -11,11 +11,20 @@ class DataCategory(models.Model):
     def __str__(self):
         return f"{self.name} - {self.description}"
 
+class AnonFunction(models.Model):
+    name = models.CharField(max_length=250, unique=True)
+    function = models.CharField(max_length=250, default="")
+    is_column_name_parameter = models.BooleanField(default=True)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.description}"
+
 class MaskingStrategy(models.Model):
     name = models.CharField(max_length=250, unique=True)
     description = models.TextField(blank=True)
-    parameters = models.JSONField(default=dict)
-    anon_function = models.CharField(max_length=250)
+    parameters = models.JSONField(default=list, blank=True)
+    anon_function = models.ForeignKey(AnonFunction, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.name} - {self.description}"

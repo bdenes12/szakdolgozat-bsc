@@ -21,3 +21,17 @@ create schema dev_export;
 
 create view dev_export.departments AS
 SELECT * FROM public.departments;
+
+create view dev_export.patients AS
+SELECT     
+	patient_id,
+    national_health_id,
+    anon.fake_first_name() AS first_name,
+    last_name,
+    mother_name,
+    birth_date,
+    gender,
+    anon.partial_email(email) AS email,
+    phone_number,
+    created_at 
+FROM public.patients;

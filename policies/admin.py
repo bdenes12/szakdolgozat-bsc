@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import DataCategory, MaskingStrategy, ColumnPolicy
+from .models import DataCategory, AnonFunction, MaskingStrategy, ColumnPolicy
 
 # Register your models here.
 
 #admin.site.register(DataCategory)
 #admin.site.register(MaskingStrategy)
-#admin.site.register(ColumnPolicy)
+admin.site.register(AnonFunction)
 
 @admin.register(DataCategory)
 class DataCategoryAdmin(admin.ModelAdmin):
