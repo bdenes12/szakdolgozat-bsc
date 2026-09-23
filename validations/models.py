@@ -1,8 +1,7 @@
 from django.db import models
+from django.utils import timezone
 from pipelines.models import PipelineRun
 from policies.models import ColumnPolicy
-
-# Create your models here.
 
 class ValidationRun(models.Model):
 
@@ -15,8 +14,19 @@ class ValidationRun(models.Model):
 
     status = models.CharField(max_length=250, choices=ValidationRunStatuses.choices)
     started_at = models.DateTimeField(auto_now_add=True) # létrehozáskor létrejön a dátum, és ha a sort updatelnénk ez akkor sem változik meg
-    finished_at = models.DateField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
     error_message = models.TextField(blank=True)
+
+    def mark_completed(self):
+        self.status=self.ValidationRunStatuses.COMPLETED
+        self.finished_at=timezone.now()
+        self.save()
+
+    def mark_failed(self, err_message):
+        self.status=self.ValidationRunStatuses.FAILED
+        self.finished_at=timezone.now()
+        self.error_message=err_message
+        self.save()
 
 class ValidationResult(models.Model):
 

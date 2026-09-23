@@ -46,8 +46,19 @@ def staging_to_dev():
     source = sql_database(
         staging_dsn,
         schema="dev_export",
-        table_names=["departments"],
-        backend="pyarrow"
+        table_names=[
+            "departments",
+            "icd_codes",
+            "practitioners",
+            "patients",
+            "patient_addresses",
+            "insurance_policies",
+            "encounters",
+            "diagnoses",
+            "lab_results",
+            "invoices",
+        ],
+        backend="sqlalchemy"
     )
 
     pipeline = dlt.pipeline(
@@ -55,5 +66,7 @@ def staging_to_dev():
         destination="postgres",
         dataset_name="public"
     )
+
+    pipeline.drop_pending_packages()
 
     pipeline.run(source, credentials=dev_dsn, write_disposition="replace")

@@ -57,10 +57,17 @@ def apply_policies():
 
         with conn_staging:
             with conn_staging.cursor() as cur_staging:
-                for table_name, policy in groupby (active_policies, key = lambda x: x.table_name):
+
+                for table_name, policy in groupby(active_policies, key = lambda x: x.table_name):
                     active_policies_by_tables[table_name] = list(policy)
 
-                for table_name, policies in active_policies_by_tables.items():
+                cur_staging.execute(sql.SQL("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"))
+                table_names = [row[0] for row in cur_staging.fetchall()]
+
+                for table_name in table_names:
+                    policies = active_policies_by_tables.get(table_name, [])
+
+                #for table_name, policies in active_policies_by_tables.items():
                     cur_staging.execute(sql.SQL("SELECT column_name FROM information_schema.columns WHERE table_name = {table_name} AND table_schema = 'public' ").format(
                          table_name = sql.Literal(table_name)
                     ))

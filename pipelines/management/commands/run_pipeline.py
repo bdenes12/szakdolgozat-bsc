@@ -5,4 +5,3 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         PipelineService().start_pipeline()
-        #self.stdout.write(self.style.SUCCESS("A pipeline folyamat sikeresen lefutott!"))

@@ -1,0 +1,72 @@
+ETL / validáció — rövid emlékeztető (2026-09-23)
+
+Miért kellett az apply_policies + dlt lista
+-------------------------------------------
+A RowCountCheck a prod ÖSSZES public alaptábláját számolja, nem csak a
+policy-sakat. Ha a deven csak departments (vagy csak maszkolt táblák) van,
+a count elszáll vagy FAIL.
+
+Szabály: minden staging public alaptábla kap dev_export nézetet.
+- van DEVELOPMENT policy → maszk + AS eredeti oszlopnév
+- nincs policy → az oszlopok simán átmennek
+A dlt a staging_to_dev-ben a 10 nézetet viszi (table_names lista).
+Alapból a sql_database NEM olvassa a view-kat; table_names-ben a név
+akkor is megy, ha view. (Alternatíva: include_views=True.)
+
+CAST 
+----------------
+anon.noise(paid_amount, 0.15) csak arányt kap, tizedest NEM.
+A noise integer/bigint/double-szerű értéket ad, sok törtjeggyel.
+A dlt pyarrow ezt decimal128-ra akarja tenni →
+"Insufficient decimal precision / data loss" az invoices extractnél.
+
+Ez eddig nem jött elő, mert csak a departments ment destbe.
+
+Általános javítás (szép, a dolgozatba való), NEM noise-if:
+a maszkos oszlopot a nézetben az eredeti PG típusra kell CAST-olni
+(information_schema: data_type, numeric_precision, numeric_scale),
+pl. ({mask})::numeric(12,2) AS paid_amount.
+Így a teszt-DB sémája a prodhoz igazodik, új numerikus maszk sem töri a dlt-t.
+
+Ideiglenes megkerülés: staging_to_dev backend="sqlalchemy"
+(nincs arrow decimal), de a dest típusai lazulhatnak.
+
+Újrafuttatás
+------------
+Sikeres futás: replace + CREATE OR REPLACE → ismételhető.
+Hibás futás: dlt pending csomagot hagy; a következő extractet IGNORÁLJA,
+amíg a pending bent van → _dlt_load_id NULL / régi csomag.
+
+Kódban (kész dolgozat): prod_to_staging és staging_to_dev,
+pipeline.run ELŐTT: pipeline.drop_pending_packages()
+Egyszeri takarítás, ha már elszállt: ugyanaz a parancs CLI-n, plusz
+a DEV public dlt-táblái (departments, _dlt_*), a staginget/prodot ne.
+
+_dlt_id / _dlt_load_id
+----------------------
+Csak ott van, ahol a dlt CREATE TABLE-t csinált (dev: üres init).
+A stagingen a DDL a te SQL-ed, oda truncate/insert megy, nincs extra oszlop.
+Validáció: oszlopnév _dlt_ prefix → kihagyni (típuscheck).
+A COUNT(*) ettől még stimmel (nem plusz sor).
+
+RowCountCheck teszt (Django shell)
+----------------------------------
+Projekt gyökér: python manage.py shell
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+from validations.checks import RowCountCheck
+
+check = RowCountCheck(
+    os.getenv("PRODUCTION_DSN"),
+    os.getenv("STAGING_DSN"),
+    os.getenv("DEV_DSN"),
+    policies=[],
+)
+for row in check.execute():
+    print(row["table_name"], row["status"], row["metrics"])
+
+Várható: 10 tábla, PASS, három count egyenlő.
+A validáció a pipeline végére még nincs bekötve.
