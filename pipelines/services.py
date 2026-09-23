@@ -1,5 +1,6 @@
 from .models import PipelineRun
 from .dlt_adapter import prod_to_staging, staging_to_dev
+from anonymization.services import apply_policies
 
 class PipelineService:
 
@@ -9,6 +10,8 @@ class PipelineService:
 
         try:
             self.transfer_to_staging(pipeline_obj)
+
+            self.apply_anonymization()
 
             self.transfer_to_development(pipeline_obj)
 
@@ -25,3 +28,6 @@ class PipelineService:
 
     def transfer_to_development(self, pipeline_obj):
         staging_to_dev() 
+
+    def apply_anonymization(self):
+        apply_policies()

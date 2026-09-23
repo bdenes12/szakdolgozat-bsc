@@ -46,7 +46,7 @@ def staging_to_dev():
     source = sql_database(
         staging_dsn,
         schema="dev_export",
-        table_names=["departments", "patients"],
+        table_names=["departments"],
         backend="pyarrow"
     )
 
