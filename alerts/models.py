@@ -1,7 +1,6 @@
 from django.db import models
+from django.utils import timezone
 from validations.models import ValidationRun, ValidationResult
-
-# Create your models here.
 
 class Alert(models.Model):
 
@@ -28,3 +27,8 @@ class Alert(models.Model):
     is_resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
+
+    def resolve(self):
+        self.is_resolved=True
+        self.resolved_at=timezone.now()
+        self.save()

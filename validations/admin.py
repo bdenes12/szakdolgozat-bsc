@@ -1,9 +1,6 @@
 from datetime import timezone
-
 from django.contrib import admin
 from .models import ValidationRun, ValidationResult
-
-# Register your models here.
 
 @admin.register(ValidationRun)
 class ValidationRunAdmin(admin.ModelAdmin):

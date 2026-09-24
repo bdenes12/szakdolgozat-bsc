@@ -3,6 +3,7 @@ from validations.models import ValidationRun, ValidationResult
 from pipelines.models import PipelineRun
 from policies.services import PolicyService
 from policies.models import ColumnPolicy
+from alerts.services import AlertService
 from validations.checks import RowCountCheck, ColumnTypeCheck, ValueOverlapCheck
 
 class ValidationService:         
@@ -14,6 +15,9 @@ class ValidationService:
         try:
             check_results = self.execute_checks()
             save_results = self.save_results(validation_run_obj, check_results)
+            print(save_results)
+            AlertService().create_alerts(validation_run_obj, save_results)
+
             validation_run_obj.mark_completed()
 
         except Exception as e:
