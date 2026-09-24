@@ -13,8 +13,8 @@ class ValidationRunAdmin(admin.ModelAdmin):
 
 @admin.register(ValidationResult)
 class ValidationResultAdmin(admin.ModelAdmin):
-    list_display = ["schema_name", "table_name", "column_name", "check_type", "status"]
-    list_filter = ["table_name", "status"]
+    list_display = ["table_name", "column_name", "check_type", "status", "message"]
+    list_filter = ["table_name", "status", "check_type"]
     list_select_related = ["validation_run", "column_policy"]
 
 @admin.action(description="Mark completed")

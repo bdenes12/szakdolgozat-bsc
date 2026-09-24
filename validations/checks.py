@@ -184,11 +184,15 @@ class ValueOverlapCheck(BaseCheck):
         leaks = prod_values.intersection(dev_values)
         leaks_count = len(leaks)
 
-        overlap_ratio = (leaks_count / len(prod_values)) * 100
+        try:
+            overlap_ratio = (leaks_count / len(prod_values)) * 100
+
+        except ZeroDivisionError:
+            print("A prod-ból kapott értékek száma 0, ezért nem lehetséges az osztás!")
+
 
         return {
             "leaks_count": leaks_count,
-            "leaks": leaks, # CSAK TESZTELÉSI CÉLLAL, KÉSŐBB ELVÉTELRE KERÜL
             "overlap_ratio": round(overlap_ratio, 4),
             "prod_distinct_count": len(prod_values),
             "dev_distinct_count": len(dev_values)
@@ -212,7 +216,7 @@ class ValueOverlapCheck(BaseCheck):
                 "check_type": ValidationResult.CheckTypes.VALUE_OVERLAP,
                 "status": ValidationResult.ValidationResultStatuses.PASS if metrics['overlap_ratio'] <= threshold else ValidationResult.ValidationResultStatuses.FAIL,
                 "metrics": metrics,
-                "applied_thresholds": {"maximum_pverlap": threshold},
+                "applied_thresholds": {"maximum_overlap": threshold},
                 "message": "The overlap is below the permitted value" if metrics['overlap_ratio'] <= threshold else f"Overlap {metrics['overlap_ratio']} exceeds {threshold}",
                 "column_policy": policy,
             })
