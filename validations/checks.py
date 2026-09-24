@@ -152,3 +152,73 @@ class ColumnTypeCheck(BaseCheck):
 
         return results
 
+class ValueOverlapCheck(BaseCheck):
+
+    def _column_values(self, dsn, schema, table, column):
+
+        conn = None
+
+        result = set()
+
+        try:
+
+            conn = psycopg2.connect(dsn)
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute(sql.SQL("SELECT {column_name} FROM {schema}.{table_name}").format(
+                        column_name = sql.Identifier(column),
+                        schema = sql.Identifier(schema),
+                        table_name = sql.Identifier(table)
+                    ))
+
+                    result = {row[0] for row in cur.fetchall() if row[0] is not None}
+
+            return result
+
+        finally:
+            if conn:
+                conn.close()
+
+    def _calculate_overlap(self, prod_values, dev_values):
+
+        leaks = prod_values.intersection(dev_values)
+        leaks_count = len(leaks)
+
+        overlap_ratio = (leaks_count / len(prod_values)) * 100
+
+        return {
+            "leaks_count": leaks_count,
+            "leaks": leaks, # CSAK TESZTELÉSI CÉLLAL, KÉSŐBB ELVÉTELRE KERÜL
+            "overlap_ratio": round(overlap_ratio, 4),
+            "prod_distinct_count": len(prod_values),
+            "dev_distinct_count": len(dev_values)
+        }
+
+    def execute(self):
+
+        results = []
+
+        for policy in self.policies:
+            prod_col_values = self._column_values(self.prod_dsn, policy.schema_name, policy.table_name, policy.column_name)
+            dev_col_values = self._column_values(self.dev_dsn, policy.schema_name, policy.table_name, policy.column_name)
+
+            metrics = self._calculate_overlap(prod_col_values, dev_col_values)
+            threshold = float(policy.data_category.maximum_overlap)
+
+            results.append({
+                "schema_name": policy.schema_name,
+                "table_name": policy.table_name,
+                "column_name": policy.column_name,
+                "check_type": ValidationResult.CheckTypes.VALUE_OVERLAP,
+                "status": ValidationResult.ValidationResultStatuses.PASS if metrics['overlap_ratio'] <= threshold else ValidationResult.ValidationResultStatuses.FAIL,
+                "metrics": metrics,
+                "applied_thresholds": {"maximum_pverlap": threshold},
+                "message": "The overlap is below the permitted value" if metrics['overlap_ratio'] <= threshold else f"Overlap {metrics['overlap_ratio']} exceeds {threshold}",
+                "column_policy": policy,
+            })
+
+        return results
+
+
+
+        
