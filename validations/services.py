@@ -15,7 +15,11 @@ class ValidationService:
         try:
             check_results = self.execute_checks()
             save_results = self.save_results(validation_run_obj, check_results)
+            
             AlertService().create_alerts(validation_run_obj, save_results)
+            
+            environment, missing_policies = PolicyService().find_missing_policies(os.getenv("PRODUCTION_DSN"), ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
+            AlertService().create_missing_policy_alerts(validation_run_obj, missing_policies, environment)
 
             validation_run_obj.mark_completed()
 
