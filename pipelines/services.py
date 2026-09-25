@@ -1,6 +1,7 @@
 from .models import PipelineRun
 from .dlt_adapter import prod_to_staging, staging_to_dev
 from anonymization.services import apply_policies
+from validations.services import ValidationService
 
 class PipelineService:
 
@@ -14,6 +15,8 @@ class PipelineService:
             self.apply_anonymization()
 
             self.transfer_to_development(pipeline_obj)
+
+            ValidationService().run_validation(pipeline_obj)
 
             pipeline_obj.mark_completed()
 

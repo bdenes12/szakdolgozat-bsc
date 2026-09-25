@@ -9,8 +9,11 @@ class Alert(models.Model):
 
     # ezeket majd később átdolgozom, egyelőre maradhatnak
     class AlertType(models.TextChoices):
-        HIGH = "HIGH", "High"
-        LOW = "LOW", "Low"
+        ROW_COUNT = "ROW_COUNT", "Row count"
+        COLUMN_TYPE = "COLUMN_TYPE", "Column type"
+        VALUE_OVERLAP = "VALUE_OVERLAP", "Value overlap"
+        STATISTICAL = "STATISTICAL", "Statistical"
+        MISSING_POLICY = "MISSING_POLICY", "Missing policy"
 
     alert_type = models.CharField(max_length=250, choices=AlertType.choices)
 
