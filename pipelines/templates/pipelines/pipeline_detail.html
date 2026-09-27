@@ -8,44 +8,44 @@
     <h2>Validáció futási adatok:</h2>
     <p>{{ validation_run.status }} - {{ validation_run.started_at }} - {{ validation_run.finished_at }} -  {{ validation_run.error_message }}</p>
 
-<h2>Létrejövő Alert-ek:</h2>
+    <h2>Létrejövő Alert-ek:</h2>
 
-<h3>Nyitott Alertek száma: {{ not_resolved_alerts }}</h3>
+    <h3>Nyitott Alertek száma: {{ not_resolved_alerts }}</h3>
 
-<a href="{% url 'alerts:alert-list' %}">Tovább a nyitott alert-ekre!</a>
+    <a href="{% url 'alerts:alert-list' %}">Tovább a nyitott alert-ekre!</a>
 
-<h3>CRITICAL vagy WARNING típusú alertek:</h3>
-{% for alert in alerts %}
-    <p>{{ alert.alert_type }} - {{ alert.severity }} - {{ alert.table_name }} -  {{ alert.column_name }} - {{ alert.message }} - {{ alert.is_resolved }}</p>
-{% endfor %}
-<table>
-    <thead>
-        <tr>
-            <th>séma</th>
-            <th>tábla</th>
-            <th>oszlop</th>
-            <th>check_type</th>
-            <th>status</th>
-            <th>metrics</th>
-            <th>applied_thresholds</th>
-            <th>message</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for result in validation_results %}
-        <tr>
-            <td>{{ result.schema_name }}</td>
-            <td>{{ result.table_name }}</td>
-            <td>{{ result.column_name }}</td>
-            <td>{{ result.check_type }}</td>
-            <td>{{ result.status }}</td>
-            <td>{{ result.metrics }}</td>
-            <td>{{ result.applied_thresholds }}</td>
-            <td>{{ result.message }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <h3>CRITICAL vagy WARNING típusú alertek:</h3>
+    {% for alert in alerts %}
+        <p>{{ alert.alert_type }} - {{ alert.severity }} - {{ alert.table_name }} -  {{ alert.column_name }} - {{ alert.message }} - {{ alert.is_resolved }}</p>
+    {% endfor %}
+    <table>
+        <thead>
+            <tr>
+                <th>séma</th>
+                <th>tábla</th>
+                <th>oszlop</th>
+                <th>check_type</th>
+                <th>status</th>
+                <th>metrics</th>
+                <th>applied_thresholds</th>
+                <th>message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in validation_results %}
+            <tr>
+                <td>{{ result.schema_name }}</td>
+                <td>{{ result.table_name }}</td>
+                <td>{{ result.column_name }}</td>
+                <td>{{ result.check_type }}</td>
+                <td>{{ result.status }}</td>
+                <td>{{ result.metrics }}</td>
+                <td>{{ result.applied_thresholds }}</td>
+                <td>{{ result.message }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endif %}
 
 <p><a href="{% url 'pipelines:pipeline-list' %}">Vissza a Pipeline-okra!</a></p>

@@ -83,6 +83,10 @@ def apply_policies():
                                 sql.Identifier(policy.column_name)
                             )
 
+                    cur_staging.execute(sql.SQL("DROP VIEW IF EXISTS dev_export.{table_name}").format(
+                        table_name = sql.Identifier(table_name)
+                    ))
+                    
                     cur_staging.execute(sql.SQL("CREATE OR REPLACE VIEW dev_export.{table_name} AS SELECT {} FROM public.{table_name}").format(
                         sql.SQL(', ').join(columns),
                         table_name = sql.Identifier(table_name)))

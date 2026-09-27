@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count
+from django.contrib.auth.decorators import login_required
 from pipelines.models import PipelineRun
 from pipelines.services import PipelineService
 from validations.models import ValidationRun, ValidationResult
 from alerts.models import Alert
 
+@login_required
 def pipeline_list_view(request):
 
     unresolved_alerts = Alert.objects.filter(is_resolved=False).count()
@@ -18,7 +20,7 @@ def pipeline_list_view(request):
 
         return redirect(pipeline_obj.get_absolute_url())
 
-    pipeline_queryset = PipelineRun.objects.all()
+    pipeline_queryset = PipelineRun.objects.all().order_by("-id")
 
     context = {
         "unresolved_alerts": unresolved_alerts,
@@ -29,6 +31,7 @@ def pipeline_list_view(request):
 
     return render(request, "pipelines/pipeline_list.html", context)
 
+@login_required
 def pipeline_detail_view(request, my_id):
 
     pipeline = get_object_or_404(PipelineRun, id=my_id)
