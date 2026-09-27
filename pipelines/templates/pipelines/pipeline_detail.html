@@ -2,10 +2,19 @@
 
 {% block content %}
 
-<h2>Validáció futási adatok:</h2>
-<p>{{ validation_run.status }} - {{ validation_run.started_at }} - {{ validation_run.finished_at }} -  {{ validation_run.error_message }}</p>
+<h1>Pipeline: {{ pipeline.id }} - Pipeline státusz: {{ pipeline.status }}</h1>
+
+{% if validation_run %}
+    <h2>Validáció futási adatok:</h2>
+    <p>{{ validation_run.status }} - {{ validation_run.started_at }} - {{ validation_run.finished_at }} -  {{ validation_run.error_message }}</p>
 
 <h2>Létrejövő Alert-ek:</h2>
+
+<h3>Nyitott Alertek száma: {{ not_resolved_alerts }}</h3>
+
+<a href="{% url 'alerts:alert-list' %}">Tovább a nyitott alert-ekre!</a>
+
+<h3>CRITICAL vagy WARNING típusú alertek:</h3>
 {% for alert in alerts %}
     <p>{{ alert.alert_type }} - {{ alert.severity }} - {{ alert.table_name }} -  {{ alert.column_name }} - {{ alert.message }} - {{ alert.is_resolved }}</p>
 {% endfor %}
@@ -37,6 +46,7 @@
         {% endfor %}
     </tbody>
 </table>
+{% endif %}
 
 <p><a href="{% url 'pipelines:pipeline-list' %}">Vissza a Pipeline-okra!</a></p>
 

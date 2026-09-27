@@ -1,7 +1,7 @@
 <nav>
     <ul>
-        <li>Főoldal</li>
-        <li>Alertek</li>
-        <li>Admin</li>
+        <li><a href="{% url 'pipelines:pipeline-list' %}">Főoldal</a></li>
+        <li><a href="{% url 'alerts:alert-list' %}">Alertek</a></li>
+        <li><a href="/admin/">Admin</a></li>
     </ul>
 </nav>

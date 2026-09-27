@@ -2,6 +2,18 @@
 
 {% block content %}
 
+<form action="." method="POST">{% csrf_token %}
+    <button name="start_pipeline" value="start_pipeline">ETL indítása!</button>
+</form>
+
+<h1>Utolsó validáció futás eredmény:</h1>
+<p>PASS státuszú: {{ pass_validation_status_count }}</p>
+<p>FAIL státuszú: {{ fail_validation_status_count }}</p>
+
+<h1>Összes nyitott alert-ek száma:</h1>
+<p>{{ unresolved_alerts }}</p>
+
+<h1>Futások:</h1>
 {% for pipeline in pipeline_list%}
     <p>{{ pipeline.id }} - <a href="{{ pipeline.get_absolute_url }}">{{ pipeline.status }}</a> - Kezdés: {{ pipeline.started_at }} Befejezés: {{ pipeline.finished_at }} Error üzenet: {{ pipeline.error_message }}</p>
 
