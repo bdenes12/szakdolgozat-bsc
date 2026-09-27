@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.db import models
+from django.urls import reverse
 
 class PipelineRun(models.Model):
 
@@ -23,3 +24,6 @@ class PipelineRun(models.Model):
         self.finished_at=timezone.now()
         self.error_message=err_message
         self.save()
+
+    def get_absolute_url(self):
+        return reverse("pipelines:pipeline-detail", kwargs={"my_id": self.id})

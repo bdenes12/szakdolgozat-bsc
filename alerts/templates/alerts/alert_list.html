@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% for alert in alert_list%}
+    <form action="{% url 'alerts:alert-resolve' alert.id %}" method="POST">{% csrf_token %}
+                
+        <p>{{ alert.alert_type }} - {{ alert.severity }} - {{ alert.table_name }} -  {{ alert.column_name }} - {{ alert.message }} - {{ alert.is_resolved }}</p>
+
+        <button name="resolve_alert" value="resolve_alert">RESOLVE</button>
+
+        <p><a href="{% url 'pipelines:pipeline-detail' alert.validation_run.pipeline_run_id %}">Hozzá tartozó pipeline! - Pipeline ID: {{ alert.validation_run.pipeline_run_id }}</a></p>
+    </form>
+{% endfor %}
+
+{% endblock %}

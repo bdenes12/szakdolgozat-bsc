@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% for pipeline in pipeline_list%}
+    <p>{{ pipeline.id }} - <a href="{{ pipeline.get_absolute_url }}">{{ pipeline.status }}</a> - Kezdés: {{ pipeline.started_at }} Befejezés: {{ pipeline.finished_at }} Error üzenet: {{ pipeline.error_message }}</p>
+
+{% endfor %}
+
+{% endblock %}
