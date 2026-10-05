@@ -1,4 +1,6 @@
 import psycopg2
+import numpy as np
+from scipy.stats import ks_2samp
 from psycopg2 import sql
 from validations.models import ValidationResult
 from abc import ABC, abstractmethod
@@ -41,6 +43,23 @@ class BaseCheck(ABC):
                 conn_prod.close()
 
         return table_names
+
+    def _quality_checks(self, policy):
+        raw = policy.quality_checks
+        
+        if isinstance(raw, dict):
+            return raw
+
+        return {}
+
+    def _stat_spec(self, policy):
+        spec = self._quality_checks(policy).get("statistical")
+        
+        if isinstance(spec, dict):
+            return spec
+
+        return None
+
 
     @abstractmethod
     def execute(self):
@@ -223,6 +242,258 @@ class ValueOverlapCheck(BaseCheck):
 
         return results
 
+class StatisticalQualityCheck(BaseCheck):
+
+    def _column_numeric_values(self, dsn, schema, table, column):
+
+        conn = None
+
+        result = []
+
+        numeric_types = ['smallint', 'integer', 'bigint', 'numeric', 'decimal', 'real', 'double precision']
+
+        try:
+
+            conn = psycopg2.connect(dsn)
+            with conn:
+                with conn.cursor() as cur:
+
+                    cur.execute(sql.SQL("SELECT data_type FROM information_schema.columns WHERE table_name = {table_name} AND table_schema = {schema} AND column_name = {column_name} ").format(
+                        table_name = sql.Literal(table),
+                        schema = sql.Literal(schema),
+                        column_name = sql.Literal(column)
+                    ))
+
+                    column_type = cur.fetchone()[0]
+
+                    if column_type in numeric_types:
+
+                        cur.execute(sql.SQL("SELECT {column_name} FROM {schema}.{table_name}").format(
+                            column_name = sql.Identifier(column),
+                            schema = sql.Identifier(schema),
+                            table_name = sql.Identifier(table)
+                        ))
+
+                        result = [float(row[0]) for row in cur.fetchall() if row[0] is not None]
+
+            return result
+
+        finally:
+            if conn:
+                conn.close()
+
+    def _value_counts(self, dsn, schema, table, column):
+
+        result = []
+
+        conn = None
+
+        try:
+
+            conn = psycopg2.connect(dsn)
+
+            with conn:
+                with conn.cursor() as cur:
+                    
+                    cur.execute(sql.SQL("SELECT {column_name}, COUNT(*) FROM {schema}.{table_name} WHERE {column_name} IS NOT NULL GROUP BY {column_name}").format(
+                        column_name = sql.Identifier(column),
+                        schema = sql.Identifier(schema),
+                        table_name = sql.Identifier(table)
+                    ))
+
+                    result = [row[1] for row in cur.fetchall()]
+
+            return result
+
+        finally:
+            if conn:
+                conn.close()
+
+    def compare_means(self, prod_values, dev_values):
+
+        np_prod_values = np.array(prod_values)
+        np_dev_values = np.array(dev_values)
+
+        if not prod_values or not dev_values:
+            mean_rel_error = None
+            prod_mean = None
+            dev_mean = None
+        else:
+            prod_mean = np.mean(np_prod_values)
+            dev_mean = np.mean(np_dev_values)    
+            mean_rel_error = round(abs(dev_mean - prod_mean)/abs(prod_mean), 6)
+
+        if prod_mean == 0:
+            mean_rel_error = None            
+
+        return {
+            "prod_mean": float(prod_mean),
+            "dev_mean": float(dev_mean),
+            "mean_rel_error": float(mean_rel_error)
+        }
+
+    def compare_standard_deviations(self, prod_values, dev_values):
+
+        np_prod_values = np.array(prod_values)
+        np_dev_values = np.array(dev_values)
+
+        if not prod_values or not dev_values:
+            std_rel_error = None
+            prod_std = None
+            dev_std = None
+        else:
+            prod_std = np.std(np_prod_values, ddof=0)
+            dev_std = np.std(np_dev_values, ddof=0)
+            std_rel_error = round(abs(dev_std - prod_std)/abs(prod_std), 6)       
+
+        if prod_std == 0:
+            std_rel_error = None            
+
+        return {
+            "prod_std": flaot(prod_std),
+            "dev_std": float(dev_std),
+            "std_rel_error": float(std_rel_error)
+        }
+
+    def compare_distributions(self, prod_values, dev_values):
+
+        if len(prod_values) < 2 or len(dev_values) < 2:
+            ks_statistic = None
+            ks_pvalue = None
+        
+        else:
+            result = ks_2samp(prod_values, dev_values)
+            ks_statistic = result.statistic
+            ks_pvalue = result.pvalue
+
+        return {
+            "ks_statistic": float(ks_statistic),
+            "ks_pvalue": float(ks_pvalue)
+        }
+
+    def calculate_entropy(self, value_counts):
+        if not value_counts:
+            return 0.0
+
+        np_value_counts = np.array(value_counts, dtype=float)
+        value_counts_sum = np.sum(np_value_counts)
+
+        if value_counts_sum == 0:
+            return 0.0
+        
+        p = np_value_counts / value_counts_sum
+
+        p_non_zero = p[p > 0]
+
+        entropy = -np.sum(p_non_zero * np.log2(p_non_zero))
+
+        return float(entropy)
+
+
+    def execute(self):
+
+        results = []
+
+        for policy in self.policies:
+
+            spec = self._stat_spec(policy)
+            
+            if spec is None:
+                continue
+
+            mean_enabled = spec.get("mean", {}).get("enabled")
+            std_enabled = spec.get("std", {}).get("enabled")
+            ks_enabled = spec.get("ks", {}).get("enabled")
+            entropy_enabled = spec.get("entropy", {}).get("enabled")
+
+            if mean_enabled != True and std_enabled != True and ks_enabled != True and entropy_enabled != True:
+                continue
+
+            metrics = {}
+            applied_thresholds = {}
+            failed = []
+
+            schema = policy.schema_name
+            table = policy.table_name
+            column = policy.column_name
+
+            if mean_enabled == True or std_enabled == True or ks_enabled == True:
+                prod = self._column_numeric_values(self.prod_dsn, schema, table, column)
+                dev = self._column_numeric_values(self.dev_dsn, schema, table, column)
+                metrics["prod_len"] = len(prod)
+                metrics["dev_len"] = len(dev)
+
+            if mean_enabled:
+                max_mean_rel_error = spec["mean"].get("max_rel_error") or 0.20
+                applied_thresholds["max_mean_rel_error"] = max_mean_rel_error
+                mean = self.compare_means(prod, dev)
+                mean_rel_error = mean["mean_rel_error"]
+                metrics.update(mean)
+
+                if mean_rel_error is not None and mean_rel_error > max_mean_rel_error:
+                    failed.append(f"Mean rel error {mean_rel_error} exceeds {max_mean_rel_error} !")
+
+            if std_enabled:
+                max_std_rel_error = spec["std"].get("max_rel_error") or 0.25
+                applied_thresholds["max_std_rel_error"] = max_std_rel_error
+                std = self.compare_standard_deviations(prod, dev)
+                std_rel_error = std["std_rel_error"]
+                metrics.update(std)
+
+                if std_rel_error is not None and std_rel_error > max_std_rel_error:
+                    failed.append(f"Std rel error {std_rel_error} exceeds {max_std_rel_error} !")
+
+            if ks_enabled:
+                max_statistic = spec["ks"].get("max_statistic") or 0.20
+                min_pvalue = spec["ks"].get("min_pvalue") or 0.05
+
+                applied_thresholds["max_statistic"] = max_statistic
+                applied_thresholds["min_pvalue"] = min_pvalue
+
+                distributions = self.compare_distributions(prod, dev)
+                metrics.update(distributions)
+                ks_statistic = distributions["ks_statistic"]
+                ks_pvalue = distributions["ks_pvalue"]                    
+                
+                if ks_statistic is not None and (ks_statistic > max_statistic or ks_pvalue < min_pvalue):
+                    failed.append(f"KS statistic or pvalue error ks_statistic: {ks_statistic} -  max_statistic: {max_statistic} ; ks_pvalue: {ks_pvalue} - min_pvalue: {min_pvalue} !")
+
+            if entropy_enabled:
+                prod_counts = self._value_counts(self.prod_dsn, schema, table, column)
+                prod_entropy = self.calculate_entropy(prod_counts)
+
+                dev_counts = self._value_counts(self.dev_dsn, schema, table, column)
+                dev_entropy = self.calculate_entropy(dev_counts)
+
+                max_entropy_rel_error = spec["entropy"].get("max_rel_error") or 0.40
+                applied_thresholds["max_entropy_rel_error"] = max_entropy_rel_error
+
+                if prod_entropy == 0:
+                    entropy_rel_error = None
+
+                else:
+                    entropy_rel_error = round(abs(dev_entropy - prod_entropy)/abs(prod_entropy), 6)
+
+                metrics["prod_entropy"] = prod_entropy
+                metrics["dev_entropy"] = dev_entropy
+                metrics["entropy_rel_error"] = entropy_rel_error
+
+                if entropy_rel_error is not None and entropy_rel_error > max_entropy_rel_error:
+                    failed.append(f"Entropy rel error {entropy_rel_error} exceeds {max_entropy_rel_error} !")
+
+            results.append({
+                "schema_name": policy.schema_name,
+                "table_name": policy.table_name,
+                "column_name": policy.column_name,
+                "check_type": ValidationResult.CheckTypes.STATISTICAL,
+                "status": ValidationResult.ValidationResultStatuses.PASS if not failed else ValidationResult.ValidationResultStatuses.FAIL,
+                "metrics": metrics,
+                "applied_thresholds": applied_thresholds,
+                "message": "; ".join(failed) if failed else "Statistical checks within limits",
+                "column_policy": policy,
+            })
+
+        return results
 
 
         

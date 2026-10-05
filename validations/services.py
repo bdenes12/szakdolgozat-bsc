@@ -4,7 +4,7 @@ from pipelines.models import PipelineRun
 from policies.services import PolicyService
 from policies.models import ColumnPolicy
 from alerts.services import AlertService
-from validations.checks import RowCountCheck, ColumnTypeCheck, ValueOverlapCheck
+from validations.checks import RowCountCheck, ColumnTypeCheck, ValueOverlapCheck, StatisticalQualityCheck
 
 class ValidationService:         
 
@@ -39,8 +39,8 @@ class ValidationService:
 
         results = []
 
-        checks = [RowCountCheck(prod_dsn,staging_dsn, dev_dsn, policies), ColumnTypeCheck(prod_dsn,staging_dsn, dev_dsn, policies), 
-                  ValueOverlapCheck(prod_dsn,staging_dsn, dev_dsn, policies)]
+        checks = [RowCountCheck(prod_dsn, staging_dsn, dev_dsn, policies), ColumnTypeCheck(prod_dsn, staging_dsn, dev_dsn, policies), 
+                  ValueOverlapCheck(prod_dsn, staging_dsn, dev_dsn, policies), StatisticalQualityCheck(prod_dsn, staging_dsn, dev_dsn, policies)]
 
         for check in checks:
             results.extend(check.execute())

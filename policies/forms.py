@@ -9,11 +9,11 @@ class ColumnPolicyForm(forms.ModelForm):
     statistical_ks = forms.BooleanField(required=False, initial=False, label='Kolmogorov-Smirnov (eloszlás)')
     statistical_entropy = forms.BooleanField(required=False, initial=False, label='Shannon-entrópia')
 
-    max_mean_rel_error = forms.DecimalField(required=False, max_digits=4, decimal_places=2, label="Átlag - max. relatív eltérés (0.20 = 20%)")
-    max_std_rel_error = forms.DecimalField(required=False, max_digits=4, decimal_places=2, label="Szórás - max. relatív eltérés (0.25 = 25%)")
-    max_ks_statistic = forms.DecimalField(required=False, max_digits=4, decimal_places=2, label="KS - max. távolság (0 = azonos, 1 = teljesen más)")
-    min_ks_pvalue = forms.DecimalField(required=False, max_digits=4, decimal_places=2, label="KS - min. p-érték (pl. 0.05)")
-    max_entropy_rel_error = forms.DecimalField(required=False, max_digits=4, decimal_places=2, label="Entrópia - max. relatív eltérés (0.40 = 40%)")
+    max_mean_rel_error = forms.DecimalField(required=False, max_digits=4, decimal_places=4, label="Átlag - max. relatív eltérés (0.20 = 20%)")
+    max_std_rel_error = forms.DecimalField(required=False, max_digits=4, decimal_places=4, label="Szórás - max. relatív eltérés (0.25 = 25%)")
+    max_ks_statistic = forms.DecimalField(required=False, max_digits=4, decimal_places=4, label="KS - max. távolság (0 = azonos, 1 = teljesen más)")
+    min_ks_pvalue = forms.DecimalField(required=False, max_digits=4, decimal_places=4, label="KS - min. p-érték (pl. 0.05)")
+    max_entropy_rel_error = forms.DecimalField(required=False, max_digits=4, decimal_places=4, label="Entrópia - max. relatív eltérés (0.40 = 40%)")
 
     class Meta:
         model = ColumnPolicy
@@ -23,6 +23,7 @@ class ColumnPolicyForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         qc = {}
+        stat = {} 
         if self.instance and self.instance.pk:
             raw = self.instance.quality_checks
             if isinstance(raw, dict):
