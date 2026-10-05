@@ -40,7 +40,43 @@ def build_mask_expression(policy_obj: ColumnPolicy):
 
         mark_exp = sql.SQL("{}.{}()").format(schema, name)
 
-    return mark_exp            
+    return mark_exp  
+
+    
+def apply_staging_labels():
+    
+    active_policies = PolicyService().get_active_policies(environment=ColumnPolicy.EnvironmentTypes.STAGING).order_by('table_name')
+
+    conn_staging = None
+
+    try:
+        dsn_staging = os.getenv("STAGING_DSN")
+        conn_staging = psycopg2.connect(dsn_staging)
+
+        with conn_staging:
+            with conn_staging.cursor() as cur:
+                
+                for policy in active_policies:
+                    mask_exp = build_mask_expression(policy).as_string(cur)
+
+                    label = "MASKED WITH FUNCTION " + mask_exp
+
+                    if not policy.masking_policy:
+                        continue
+
+                    cur.execute(sql.SQL("SECURITY LABEL FOR {masking_policy} ON COLUMN {schema_name}.{table_name}.{column_name} is {label} ").format(
+                        masking_policy = sql.Identifier(policy.masking_policy.lower()),
+                        schema_name = sql.Identifier(policy.schema_name),
+                        table_name = sql.Identifier(policy.table_name),
+                        column_name = sql.Identifier(policy.column_name),
+                        label = sql.Literal(label)
+                    ))
+
+    finally:
+        if conn_staging:
+            conn_staging.close()
+
+
 
 def apply_policies():
 
@@ -67,7 +103,6 @@ def apply_policies():
                 for table_name in table_names:
                     policies = active_policies_by_tables.get(table_name, [])
 
-                #for table_name, policies in active_policies_by_tables.items():
                     cur_staging.execute(sql.SQL("SELECT column_name FROM information_schema.columns WHERE table_name = {table_name} AND table_schema = 'public' ").format(
                          table_name = sql.Literal(table_name)
                     ))

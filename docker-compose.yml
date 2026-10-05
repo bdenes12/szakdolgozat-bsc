@@ -24,7 +24,7 @@ services:
   
   staging_db:
     image: registry.gitlab.com/dalibo/postgresql_anonymizer:stable
-    command: ["postgres", "-c", "shared_preload_libraries=anon"]
+    command: ["postgres", "-c", "shared_preload_libraries=anon", "-c", "anon.masking_policies=support,analytics"]
     environment:
       - POSTGRES_USER=user_pg
       - POSTGRES_PASSWORD=password_pg

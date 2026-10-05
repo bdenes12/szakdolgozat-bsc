@@ -1,6 +1,6 @@
 from .models import PipelineRun
 from .dlt_adapter import prod_to_staging, staging_to_dev
-from anonymization.services import apply_policies
+from anonymization.services import apply_policies, apply_staging_labels
 from validations.services import ValidationService
 
 class PipelineService:
@@ -34,3 +34,4 @@ class PipelineService:
 
     def apply_anonymization(self):
         apply_policies()
+        apply_staging_labels()

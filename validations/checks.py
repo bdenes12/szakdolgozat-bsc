@@ -350,7 +350,7 @@ class StatisticalQualityCheck(BaseCheck):
             std_rel_error = None            
 
         return {
-            "prod_std": flaot(prod_std),
+            "prod_std": float(prod_std),
             "dev_std": float(dev_std),
             "std_rel_error": float(std_rel_error)
         }

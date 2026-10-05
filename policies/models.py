@@ -1,7 +1,5 @@
 from django.db import models
 
-# Create your models here.
-
 class DataCategory(models.Model):
     name = models.CharField(max_length=250, unique=True)
     description = models.TextField(blank=True)
@@ -38,17 +36,21 @@ class ColumnPolicy(models.Model):
         STAGING = "STAGING", "Staging"
         DEVELOPMENT = "DEVELOPMENT", "Development"
 
-    target_environment = models.CharField(max_length=250, choices=EnvironmentTypes.choices, default=EnvironmentTypes.STAGING)  
+    target_environment = models.CharField(max_length=250, choices=EnvironmentTypes.choices, default=EnvironmentTypes.STAGING)
+
+    class UserTypes(models.TextChoices):
+        SUPPORT = "SUPPORT", "Support"
+        ANALYTICS = "ANALYTICS", "Analytics"
+
+    masking_policy = models.CharField(max_length=50, choices=UserTypes.choices, blank=True, default="")
     data_category = models.ForeignKey(DataCategory, on_delete=models.PROTECT)
     masking_strategy = models.ForeignKey(MaskingStrategy, on_delete=models.PROTECT)
     quality_checks = models.JSONField(default=dict)
     is_active = models.BooleanField(default=True)
 
-    #models.UniqueConstraint(fields=["schema_name", "table_name", "column_name", "target_environment"], name="unique_policy")
-
     class Meta:
         constraints = [
-                models.UniqueConstraint(fields=["schema_name", "table_name", "column_name", "target_environment"], name="unique_policy")
+                models.UniqueConstraint(fields=["schema_name", "table_name", "column_name", "target_environment", "masking_policy"], name="unique_policy")
             ]
 
     def __str__(self):

@@ -18,7 +18,7 @@ class ColumnPolicyAdmin(admin.ModelAdmin):
     list_filter = ["is_active", ]
     list_select_related = ["data_category", "masking_strategy"]
     form = ColumnPolicyForm
-    fields = ["schema_name", "table_name", "column_name", "target_environment", "data_category", "masking_strategy", "is_active",  
+    fields = ["schema_name", "table_name", "column_name", "target_environment", "data_category", "masking_strategy", "masking_policy", "is_active",  
               "value_overlap", ("statistical_mean", "max_mean_rel_error"), ("statistical_std", "max_std_rel_error"), 
               ("statistical_ks", "max_ks_statistic", "min_ks_pvalue"), ("statistical_entropy", "max_entropy_rel_error")]
 
