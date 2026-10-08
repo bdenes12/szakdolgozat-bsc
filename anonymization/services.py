@@ -55,6 +55,25 @@ def apply_staging_labels():
 
         with conn_staging:
             with conn_staging.cursor() as cur:
+
+                cur.execute(sql.SQL("" \
+                    "SELECT n.nspname, c.relname, a.attname, s.provider " \
+                    "FROM pg_seclabel s " \
+                    "JOIN pg_class c ON s.objoid = c.oid AND s.classoid = 'pg_class'::regclass " \
+                    "JOIN pg_namespace n ON c.relnamespace = n.oid " \
+                    "JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum = s.objsubid " \
+                    "WHERE s.provider IN ('support', 'analytics') AND a.attnum > 0"
+                ))
+
+                active_labels = cur.fetchall()
+
+                for label in active_labels:
+                    cur.execute(sql.SQL("SECURITY LABEL FOR {provider} ON COLUMN {schema_name}.{table_name}.{column_name} IS NULL").format(
+                        schema_name = sql.Identifier(label[0]),
+                        table_name = sql.Identifier(label[1]),
+                        column_name = sql.Identifier(label[2]),
+                        provider = sql.Identifier(label[3])
+                    ))
                 
                 for policy in active_policies:
                     mask_exp = build_mask_expression(policy).as_string(cur)

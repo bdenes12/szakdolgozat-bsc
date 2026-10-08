@@ -1,7 +1,12 @@
-<nav>
-    <ul>
-        <li><a href="{% url 'pipelines:pipeline-list' %}">Főoldal</a></li>
-        <li><a href="{% url 'alerts:alert-list' %}">Alertek</a></li>
-        <li><a href="/admin/">Admin</a></li>
-    </ul>
+<nav class="main-navbar">
+    <div class="nav-container">
+        <div class="nav-logo">
+            <span>DataPipeline</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{% url 'pipelines:pipeline-list' %}">Főoldal</a></li>
+            <li><a href="{% url 'alerts:alert-list' %}">Alertek</a></li>
+            <li><a href="/admin/" class="admin-link">Admin</a></li>
+        </ul>
+    </div>
 </nav>

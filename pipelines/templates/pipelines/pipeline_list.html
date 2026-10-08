@@ -2,21 +2,126 @@
 
 {% block content %}
 
-<form action="." method="POST">{% csrf_token %}
-    <button name="start_pipeline" value="start_pipeline">ETL indítása!</button>
+<p class="dashboard-hint">
+    ETL előtt az <a href="{% url 'admin:policies_columnpolicy_changelist' %}">admin</a> felületen állítsd be az anonimizálási szabályokat
+    (ColumnPolicy) és a minőségi küszöböket. Hiányzó szabály MISSING_POLICY riasztást ad.
+</p>
+<form class="dashboard-actions" action="." method="POST" onsubmit="document.getElementById('submit-btn').disabled = true; document.getElementById('submit-btn').innerText = 'Indítás folyamatban...';">{% csrf_token %}
+    <button type="submit" class="button button--primary" id="submit-btn" name="start_pipeline" value="start_pipeline"> ETL indítása! </button>
 </form>
 
-<h1>Utolsó validáció futás eredmény:</h1>
-<p>PASS státuszú: {{ pass_validation_status_count }}</p>
-<p>FAIL státuszú: {{ fail_validation_status_count }}</p>
+{% if last_validation_run %}
+    <section class="dashboard-metrics" id="validation-results">
+        <h2>Utolsó validáció futás eredménye</h2>
+        <div class="metric-card-grid">
+            <article class="metric-card metric-card--pass">
+                <h3>PASS</h3>
+                <p>{{ pass_validation_status_count }}</p>
+                <p>{{ pass_pct }}%</p>
+            </article>
+            <article class="metric-card metric-card--warning">
+                <h3>WARNING</h3>
+                <p>{{ warning_validation_status_count }}</p>
+                <p>{{ warning_pct }}%</p>
+            </article>
+            <article class="metric-card metric-card--fail">
+                <h3>FAIL</h3>
+                <p>{{ fail_validation_status_count }}</p>
+                <p>{{ fail_pct }}%</p>
+            </article>
+        </div>
 
-<h1>Összes nyitott alert-ek száma:</h1>
-<p>{{ unresolved_alerts }}</p>
+        <div class="chart-panel">
+            <canvas id="validationChart"></canvas>
+        </div>
 
-<h1>Futások:</h1>
-{% for pipeline in pipeline_list%}
-    <p>{{ pipeline.id }} - <a href="{{ pipeline.get_absolute_url }}">{{ pipeline.status }}</a> - Kezdés: {{ pipeline.started_at }} Befejezés: {{ pipeline.finished_at }} Error üzenet: {{ pipeline.error_message }}</p>
+        <article class="metric-card metric-card--alert">
+            <h3>Nyitott riasztások</h3>
+            <p>{{ unresolved_alerts }}</p>
+        </article>
+        <div class="chart-panel">
+            <canvas id="alertChart"></canvas>
+        </div>
 
-{% endfor %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const ctx_validation = document.getElementById("validationChart").getContext("2d");
+                new Chart(ctx_validation, {
+                    type: 'pie',
+                    data: {
+                        labels: ['PASS', 'WARNING', 'FAIL'],
+                        datasets: [{
+                            label: 'Darabszám',
+                            data: [{{ pass_validation_status_count }}, {{ warning_validation_status_count }}, {{ fail_validation_status_count }}],
+                            backgroundColor: [
+                                'rgb(46, 160, 67)',
+                                'rgb(210, 153, 34)',
+                                'rgb(207, 34, 46)'
+                            ]
+                        }]
+                    }
+                });
+
+                const ctx_alert = document.getElementById("alertChart").getContext("2d");
+                new Chart(ctx_alert, {
+                    type: 'bar',
+                    data: {
+                        labels: ['INFO', 'WARNING', 'CRITICAL'],
+                        datasets: [{
+                            data: [{{ alert_severity_info }}, {{ alert_severity_warning }}, {{ alert_severity_critical }}],
+                            backgroundColor: [
+                                'rgb(107, 114, 128)',
+                                'rgb(210, 153, 34)',
+                                'rgb(207, 34, 46)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            });
+        </script>
+    </section>
+
+{% else %}
+<p class="dashboard-empty">Még nincs validációs futás.</p>
+{% endif %}
+
+<section class="dashboard-runs">
+    <h2>Futások</h2>
+    <table class="runs-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Státusz</th>
+                <th>Kezdés</th>
+                <th>Befejezés</th>
+                <th>Hiba</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pipeline in pipeline_list %}
+            <tr>
+                <td>{{ pipeline.id }}</td>
+                <td><a href="{{ pipeline.get_absolute_url }}">{{ pipeline.status }}</a></td>
+                <td>{{ pipeline.started_at }}</td>
+                <td>{{ pipeline.finished_at }}</td>
+                <td>{{ pipeline.error_message }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Még nincs pipeline futás.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
 
 {% endblock %}
