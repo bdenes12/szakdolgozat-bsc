@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Count
+from django.http import HttpResponse, Http404
 from django.contrib.auth.decorators import login_required
 from pipelines.models import PipelineRun
 from pipelines.services import PipelineService
-from validations.models import ValidationRun, ValidationResult
+from validations.models import ValidationRun, ValidationResult, ValidationReport
 from alerts.models import Alert
 
 @login_required
@@ -78,3 +78,15 @@ def pipeline_detail_view(request, my_id):
         "not_resolved_alerts": not_resolved_alerts
     }
     return render(request, "pipelines/pipeline_detail.html", context)
+
+@login_required
+def pipeline_report(request, my_id):
+    
+    pipeline = get_object_or_404(PipelineRun, id=my_id)
+    validation_run = ValidationRun.objects.filter(pipeline_run=pipeline).order_by("-id").first()
+    report = ValidationReport.objects.filter(validation_run=validation_run).order_by("-id").first()
+
+    if validation_run is None or report is None:
+        raise Http404("Nincs validációs riport ehhez a futáshoz.")
+
+    return HttpResponse(report.html_content)

@@ -7,7 +7,6 @@ class Alert(models.Model):
     validation_run = models.ForeignKey(ValidationRun, on_delete=models.PROTECT)
     validation_result = models.ForeignKey(ValidationResult, on_delete=models.SET_NULL, null=True, blank=True)
 
-    # ezeket majd később átdolgozom, egyelőre maradhatnak
     class AlertType(models.TextChoices):
         ROW_COUNT = "ROW_COUNT", "Row count"
         COLUMN_TYPE = "COLUMN_TYPE", "Column type"

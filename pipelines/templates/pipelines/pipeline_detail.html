@@ -7,7 +7,8 @@
 {% if validation_run %}
     <h2>Validáció futási adatok:</h2>
     <p>{{ validation_run.status }} - {{ validation_run.started_at }} - {{ validation_run.finished_at }} -  {{ validation_run.error_message }}</p>
-
+    <a href="{% url 'pipelines:pipeline-report' pipeline.id %}">HTML riport</a>
+    
     <h2>Létrejövő Alert-ek:</h2>
 
     <h3>Nyitott Alertek száma: {{ not_resolved_alerts }}</h3>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8">
+    <title>Validációs riport — pipeline {{ pipeline.id }}</title>
+    <style>
+        {% include "app.css" %}
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header>
+            <h1>Validációs riport - {{ validation_run.status }}</h1>
+            <p>Pipeline {{ pipeline.id }} — {{ pipeline.status }}</p>
+            <p>{{ validation_run.started_at }} – {{ validation_run.finished_at }}</p>
+        </header>
+
+        <section class="dashboard-metrics">
+            <h2>Összesítés</h2>
+            <div class="metric-card-grid">
+                <article class="metric-card metric-card--pass">
+                    <h3>PASS</h3>
+                    <p>{{ pass_count }}</p>
+                </article>
+                <article class="metric-card metric-card--fail">
+                    <h3>FAIL</h3>
+                    <p>{{ fail_count }}</p>
+                </article>
+                <article class="metric-card metric-card--alert">
+                    <h3>Alertek</h3>
+                    <p>{{ alert_count }}</p>
+                </article>
+            </div>
+            <h2>FAIL státuszú check-ek eloszlása</h2>
+            <div class="chart-panel">
+                <canvas id="checkChart"></canvas>
+            </div>
+        </section>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const ctx_check = document.getElementById("checkChart").getContext("2d");
+                new Chart(ctx_check, {
+                    type:'bar',
+                    data: {
+                        labels: ['ROW_COUNT', 'COLUMN_TYPE', 'VALUE_OVERLAP', 'STATISTICAL'],
+                        datasets: [{
+                            data: [{{ fail_row_count }}, {{ fail_column_type }}, {{ fail_value_overlap }}, {{ fail_statistical }}],
+                            backgroundColor: 'rgb(31, 41, 55)'
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                })
+            })
+        </script>
+
+        {% for table in tables %}
+            <section class="dashboard-runs">
+                <h2>{{ table.schema_name }}.{{ table.table_name }} — Kockázat: {{ table.risk }}</h2>
+                <table class="runs-table">
+                    <thead>
+                        <tr>
+                            <th>Oszlop név</th>
+                            <th>Ellenőrzés típusa</th>
+                            <th>Státusz</th>
+                            <th>Metrikák</th>
+                            <th>Küszöbértékek</th>
+                            <th>Üzenet</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in table.results %}
+                            <tr>
+                                <td>{{ result.column_name }}</td>
+                                <td>{{ result.check_type }}</td>
+                                <td>{{ result.status }}</td>
+                                <td>
+                                    {% for key, value in result.metrics.items %}
+                                        <div><strong>{{ key }}:</strong> {{ value }}</div>
+                                    {% empty %}
+                                        -
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for key, value in result.applied_thresholds.items %}
+                                        <div><strong>{{ key }}:</strong> {{ value }}</div>
+                                    {% empty %}
+                                        -
+                                    {% endfor %}
+                                </td>
+                                <td>{{ result.message }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <table class="runs-table">
+                    <thead>
+                        <tr>
+                            <th>Típus</th>
+                            <th>Severity</th>
+                            <th>Oszlop</th>
+                            <th>Üzenet</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in table.alerts %}
+                        <tr>
+                            <td>{{ alert.alert_type }}</td>
+                            <td>{{ alert.severity }}</td>
+                            <td>{{ alert.column_name }}</td>
+                            <td>{{ alert.message }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="dashboard-empty">Nincs riasztás.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </section>
+        {% endfor %}
+    </main>
+</body>

@@ -53,3 +53,8 @@ class ValidationResult(models.Model):
     metrics = models.JSONField(default=dict)
     applied_thresholds = models.JSONField(default=dict)
     message = models.TextField(blank=True)
+
+class ValidationReport(models.Model):
+    validation_run = models.ForeignKey(ValidationRun, on_delete=models.CASCADE)
+    generated_at = models.DateTimeField(auto_now_add=True)
+    html_content = models.TextField(blank=True)
