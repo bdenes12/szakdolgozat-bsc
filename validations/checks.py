@@ -206,7 +206,7 @@ class ValueOverlapCheck(BaseCheck):
         leaks = prod_values.intersection(dev_values)
         leaks_count = len(leaks)
 
-        overlap_ratio = round((leaks_count / len(prod_values)) * 100, 4)
+        overlap_ratio = round((leaks_count / len(prod_values)) * 100, 3)
 
         return {
             "leaks_count": leaks_count,

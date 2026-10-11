@@ -1,14 +1,12 @@
-from datetime import timedelta
+import os
 import string
-
 import psycopg2
 import random
-import os
 import psycopg2.extras as extras
+from datetime import timedelta
 from faker import Faker
 from psycopg2 import sql
 from dotenv import load_dotenv
-
 from reference_data import departments_data, icd_codes_data, PRACTITIONERS_PER_DEPARTMENT, SPECIALTIES_BY_DEPARTMENT, COVERAGE_TYPES, INSURERS, PREMIUM_RANGES, POLICY_DURATIONS_YEARS, ENCOUNTER_TYPES, STAY_DAYS_BY_TYPE, TRIAGE_LEVELS, LAB_TESTS, PAYMENT_STATUSES
 
 
