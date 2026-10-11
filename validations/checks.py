@@ -200,19 +200,17 @@ class ValueOverlapCheck(BaseCheck):
 
     def _calculate_overlap(self, prod_values, dev_values):
 
+        if not prod_values:
+            return None
+        
         leaks = prod_values.intersection(dev_values)
         leaks_count = len(leaks)
 
-        try:
-            overlap_ratio = (leaks_count / len(prod_values)) * 100
-
-        except ZeroDivisionError:
-            print("A prod-ból kapott értékek száma 0, ezért nem lehetséges az osztás!")
-
+        overlap_ratio = round((leaks_count / len(prod_values)) * 100, 4)
 
         return {
             "leaks_count": leaks_count,
-            "overlap_ratio": round(overlap_ratio, 4),
+            "overlap_ratio": overlap_ratio,
             "prod_distinct_count": len(prod_values),
             "dev_distinct_count": len(dev_values)
         }
@@ -225,7 +223,14 @@ class ValueOverlapCheck(BaseCheck):
             prod_col_values = self._column_values(self.prod_dsn, policy.schema_name, policy.table_name, policy.column_name)
             dev_col_values = self._column_values(self.dev_dsn, policy.schema_name, policy.table_name, policy.column_name)
 
+            if self._quality_checks(policy).get("value_overlap", True) is False:
+                continue
+
             metrics = self._calculate_overlap(prod_col_values, dev_col_values)
+            
+            if metrics is None:
+                continue
+
             threshold = float(policy.data_category.maximum_overlap)
 
             results.append({
@@ -319,17 +324,17 @@ class StatisticalQualityCheck(BaseCheck):
             prod_mean = None
             dev_mean = None
         else:
-            prod_mean = np.mean(np_prod_values)
-            dev_mean = np.mean(np_dev_values)    
-            mean_rel_error = round(abs(dev_mean - prod_mean)/abs(prod_mean), 6)
+            prod_mean = float(np.mean(np_prod_values))
+            dev_mean = float(np.mean(np_dev_values)) 
+            mean_rel_error = float(round(abs(dev_mean - prod_mean)/abs(prod_mean), 3))
 
         if prod_mean == 0:
             mean_rel_error = None            
 
         return {
-            "prod_mean": float(prod_mean),
-            "dev_mean": float(dev_mean),
-            "mean_rel_error": float(mean_rel_error)
+            "prod_mean": prod_mean,
+            "dev_mean": dev_mean,
+            "mean_rel_error": mean_rel_error
         }
 
     def compare_standard_deviations(self, prod_values, dev_values):
@@ -342,17 +347,17 @@ class StatisticalQualityCheck(BaseCheck):
             prod_std = None
             dev_std = None
         else:
-            prod_std = np.std(np_prod_values, ddof=0)
-            dev_std = np.std(np_dev_values, ddof=0)
-            std_rel_error = round(abs(dev_std - prod_std)/abs(prod_std), 6)       
+            prod_std = float(np.std(np_prod_values, ddof=0))
+            dev_std = float(np.std(np_dev_values, ddof=0))
+            std_rel_error = float(round(abs(dev_std - prod_std)/abs(prod_std), 3))    
 
         if prod_std == 0:
             std_rel_error = None            
 
         return {
-            "prod_std": float(prod_std),
-            "dev_std": float(dev_std),
-            "std_rel_error": float(std_rel_error)
+            "prod_std": prod_std,
+            "dev_std": dev_std,
+            "std_rel_error": std_rel_error
         }
 
     def compare_distributions(self, prod_values, dev_values):
@@ -363,15 +368,16 @@ class StatisticalQualityCheck(BaseCheck):
         
         else:
             result = ks_2samp(prod_values, dev_values)
-            ks_statistic = result.statistic
-            ks_pvalue = result.pvalue
+            ks_statistic = round(float(result.statistic), 3)
+            ks_pvalue = round(float(result.pvalue), 3)
 
         return {
-            "ks_statistic": float(ks_statistic),
-            "ks_pvalue": float(ks_pvalue)
+            "ks_statistic": ks_statistic,
+            "ks_pvalue": ks_pvalue
         }
 
     def calculate_entropy(self, value_counts):
+        
         if not value_counts:
             return 0.0
 
@@ -385,7 +391,7 @@ class StatisticalQualityCheck(BaseCheck):
 
         p_non_zero = p[p > 0]
 
-        entropy = -np.sum(p_non_zero * np.log2(p_non_zero))
+        entropy = round(-np.sum(p_non_zero * np.log2(p_non_zero)), 3)
 
         return float(entropy)
 
@@ -413,6 +419,9 @@ class StatisticalQualityCheck(BaseCheck):
             applied_thresholds = {}
             failed = []
 
+            prod = []
+            dev = []
+
             schema = policy.schema_name
             table = policy.table_name
             column = policy.column_name
@@ -426,22 +435,26 @@ class StatisticalQualityCheck(BaseCheck):
             if mean_enabled:
                 max_mean_rel_error = spec["mean"].get("max_rel_error") or 0.20
                 applied_thresholds["max_mean_rel_error"] = max_mean_rel_error
-                mean = self.compare_means(prod, dev)
-                mean_rel_error = mean["mean_rel_error"]
-                metrics.update(mean)
 
-                if mean_rel_error is not None and mean_rel_error > max_mean_rel_error:
-                    failed.append(f"Mean rel error {mean_rel_error} exceeds {max_mean_rel_error} !")
+                if prod and dev:
+                    mean = self.compare_means(prod, dev)
+                    mean_rel_error = mean["mean_rel_error"]
+                    if mean_rel_error is not None:
+                        metrics.update(mean)
+                        if mean_rel_error > max_mean_rel_error:
+                            failed.append(f"Mean rel error {mean_rel_error} exceeds {max_mean_rel_error} !")
 
             if std_enabled:
                 max_std_rel_error = spec["std"].get("max_rel_error") or 0.25
                 applied_thresholds["max_std_rel_error"] = max_std_rel_error
-                std = self.compare_standard_deviations(prod, dev)
-                std_rel_error = std["std_rel_error"]
-                metrics.update(std)
 
-                if std_rel_error is not None and std_rel_error > max_std_rel_error:
-                    failed.append(f"Std rel error {std_rel_error} exceeds {max_std_rel_error} !")
+                if prod and dev:
+                    std = self.compare_standard_deviations(prod, dev)
+                    std_rel_error = std["std_rel_error"]
+                    if std_rel_error is not None:
+                        metrics.update(std)
+                        if std_rel_error > max_std_rel_error:
+                            failed.append(f"Std rel error {std_rel_error} exceeds {max_std_rel_error} !")
 
             if ks_enabled:
                 max_statistic = spec["ks"].get("max_statistic") or 0.20
@@ -449,14 +462,16 @@ class StatisticalQualityCheck(BaseCheck):
 
                 applied_thresholds["max_statistic"] = max_statistic
                 applied_thresholds["min_pvalue"] = min_pvalue
-
-                distributions = self.compare_distributions(prod, dev)
-                metrics.update(distributions)
-                ks_statistic = distributions["ks_statistic"]
-                ks_pvalue = distributions["ks_pvalue"]                    
                 
-                if ks_statistic is not None and (ks_statistic > max_statistic or ks_pvalue < min_pvalue):
-                    failed.append(f"KS statistic or pvalue error ks_statistic: {ks_statistic} -  max_statistic: {max_statistic} ; ks_pvalue: {ks_pvalue} - min_pvalue: {min_pvalue} !")
+                if len(prod) >= 2 and len(dev) >= 2:
+                    distributions = self.compare_distributions(prod, dev)
+                    ks_statistic = distributions["ks_statistic"]
+                    ks_pvalue = distributions["ks_pvalue"]
+                    
+                    if ks_statistic is not None:   
+                        metrics.update(distributions)                 
+                        if ks_statistic > max_statistic or ks_pvalue < min_pvalue:
+                            failed.append(f"KS statistic or pvalue error ks_statistic: {ks_statistic} -  max_statistic: {max_statistic} ; ks_pvalue: {ks_pvalue} - min_pvalue: {min_pvalue} !")
 
             if entropy_enabled:
                 prod_counts = self._value_counts(self.prod_dsn, schema, table, column)
@@ -468,18 +483,18 @@ class StatisticalQualityCheck(BaseCheck):
                 max_entropy_rel_error = spec["entropy"].get("max_rel_error") or 0.40
                 applied_thresholds["max_entropy_rel_error"] = max_entropy_rel_error
 
-                if prod_entropy == 0:
-                    entropy_rel_error = None
-
-                else:
-                    entropy_rel_error = round(abs(dev_entropy - prod_entropy)/abs(prod_entropy), 6)
-
                 metrics["prod_entropy"] = prod_entropy
                 metrics["dev_entropy"] = dev_entropy
-                metrics["entropy_rel_error"] = entropy_rel_error
 
-                if entropy_rel_error is not None and entropy_rel_error > max_entropy_rel_error:
-                    failed.append(f"Entropy rel error {entropy_rel_error} exceeds {max_entropy_rel_error} !")
+                if prod_entropy != 0:
+                    entropy_rel_error = round(abs(dev_entropy - prod_entropy)/abs(prod_entropy), 3)
+                    metrics["entropy_rel_error"] = entropy_rel_error                    
+
+                    if entropy_rel_error > max_entropy_rel_error:
+                        failed.append(f"Entropy rel error {entropy_rel_error} exceeds {max_entropy_rel_error} !")
+
+            if "mean_rel_error" not in metrics and "std_rel_error" not in metrics and "ks_statistic" not in metrics and "entropy_rel_error" not in metrics:
+                continue
 
             results.append({
                 "schema_name": policy.schema_name,
