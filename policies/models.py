@@ -43,8 +43,8 @@ class ColumnPolicy(models.Model):
         ANALYTICS = "ANALYTICS", "Analytics"
 
     masking_policy = models.CharField(max_length=50, choices=UserTypes.choices, blank=True, default="")
-    data_category = models.ForeignKey(DataCategory, on_delete=models.PROTECT)
-    masking_strategy = models.ForeignKey(MaskingStrategy, on_delete=models.PROTECT)
+    data_category = models.ForeignKey(DataCategory, null=True, blank=True, on_delete=models.PROTECT)
+    masking_strategy = models.ForeignKey(MaskingStrategy, null=True, blank=True, on_delete=models.PROTECT)
     quality_checks = models.JSONField(default=dict)
     is_active = models.BooleanField(default=True)
 
@@ -55,3 +55,30 @@ class ColumnPolicy(models.Model):
 
     def __str__(self):
         return f"{self.schema_name}.{self.table_name}.{self.column_name} [{self.target_environment}]"
+
+class PolicySuggestion(models.Model):
+    schema_name = models.CharField(max_length=250)
+    table_name = models.CharField(max_length=250)
+    column_name = models.CharField(max_length=250)
+    data_type = models.CharField(max_length=250, blank=True)
+    is_pk = models.BooleanField(default=False)
+    is_fk = models.BooleanField(default=False)
+    reason = models.CharField(max_length=250, blank=True)
+    suggested_category = models.ForeignKey(DataCategory, on_delete=models.PROTECT)
+    suggested_strategy = models.ForeignKey(MaskingStrategy, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class SuggestionStatus(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        ACCEPTED = "ACCEPTED", "Accepted"
+        REJECTED = "REJECTED", "Rejected"
+
+    status = models.CharField(max_length=50, choices=SuggestionStatus.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+                models.UniqueConstraint(fields=["schema_name", "table_name", "column_name"], name="unique_policy_suggestion")
+            ]
+
+    def __str__(self):
+        return f"{self.schema_name}.{self.table_name}.{self.column_name} [{self.status}]"

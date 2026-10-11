@@ -43,11 +43,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'alerts',
-    # 'anonymization',
     'pipelines',
     'policies',
     'reporting',
     'validations',
+
+    'admin_extra_buttons',
 ]
 
 MIDDLEWARE = [

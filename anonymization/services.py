@@ -76,6 +76,10 @@ def apply_staging_labels():
                     ))
                 
                 for policy in active_policies:
+                    
+                    if policy.masking_strategy is None:
+                        continue
+
                     mask_exp = build_mask_expression(policy).as_string(cur)
 
                     label = "MASKED WITH FUNCTION " + mask_exp
@@ -129,6 +133,10 @@ def apply_policies():
                     columns = [sql.Identifier(row[0]) for row in cur_staging.fetchall()]
 
                     for policy in policies:
+                        
+                        if policy.masking_strategy is None:
+                            continue
+                        
                         if sql.Identifier(policy.column_name) in columns:
                             index = columns.index(sql.Identifier(policy.column_name))
                             mask_exp = build_mask_expression(policy)
