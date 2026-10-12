@@ -38,8 +38,11 @@ class ColumnPolicyAdmin(ExtraButtonsMixin, admin.ModelAdmin):
         html_attrs={'style': 'background-color: #417690; color: white;'}
     )
     def generate_suggestion(self, request):
-        n = SuggestionService().generate_suggestions()
-        self.message_user(request, f"{n} új javaslat sikeresen generálva.")
+        try:
+            n = SuggestionService().generate_suggestions()
+            self.message_user(request, f"{n} új javaslat sikeresen generálva.")
+        except Exception:
+            self.message_user(request, "Javaslatgenerálás sikertelen, lásd logs/app.log", level="ERROR")
 
 @admin.action(description="Javaslat elutasítása")
 def reject_suggestion(modeladmin, request, queryset):

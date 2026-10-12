@@ -55,6 +55,10 @@ class ValidationService:
         prod_dsn = os.getenv("PRODUCTION_DSN")
         staging_dsn = os.getenv("STAGING_DSN")
         dev_dsn = os.getenv("DEV_DSN")
+        
+        if not prod_dsn or not staging_dsn or not dev_dsn:
+            raise ValueError("Hiányzik a PRODUCTION_DSN, STAGING_DSN vagy DEV_DSN")
+    
         policies = PolicyService().get_active_policies(ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
 
         results = []

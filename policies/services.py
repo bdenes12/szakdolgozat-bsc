@@ -19,6 +19,9 @@ class PolicyService:
 
         try:
 
+            if not prod_dsn:
+                raise ValueError("Hiányzik a PRODUCTION_DSN")
+            
             conn_prod = psycopg2.connect(prod_dsn)
             with conn_prod:
                 with conn_prod.cursor() as cur:
@@ -134,6 +137,9 @@ class SuggestionService:
     def generate_suggestions(self):
         
         prod_dsn = os.getenv("PRODUCTION_DSN")
+
+        if not prod_dsn:
+            raise ValueError("Hiányzik a PRODUCTION_DSN")
 
         _, missing = PolicyService().find_missing_policies(prod_dsn, ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
 

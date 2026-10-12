@@ -15,6 +15,9 @@ def build_mask_expression(policy_obj: ColumnPolicy):
     anon_function = policy_obj.masking_strategy.anon_function.function
     is_column_name_parameter = policy_obj.masking_strategy.anon_function.is_column_name_parameter
 
+    if not anon_function or "." not in anon_function:
+        raise ValueError(f"Hibás AnonFunction.function: {anon_function}")
+    
     schema, name = anon_function.split('.')
 
     schema = sql.Identifier(schema)
@@ -54,6 +57,9 @@ def apply_staging_labels():
 
     try:
         dsn_staging = os.getenv("STAGING_DSN")
+        if not dsn_staging:
+            raise ValueError("Hiányzik a STAGING_DSN")
+        
         conn_staging = psycopg2.connect(dsn_staging)
 
         skipped = 0
@@ -127,6 +133,9 @@ def apply_policies():
 
     try:
         dsn_staging = os.getenv("STAGING_DSN")
+        if not dsn_staging:
+            raise ValueError("Hiányzik a STAGING_DSN")
+        
         conn_staging = psycopg2.connect(dsn_staging)
 
         with conn_staging:

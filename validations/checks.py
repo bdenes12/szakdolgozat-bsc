@@ -146,8 +146,8 @@ class ColumnTypeCheck(BaseCheck):
             for column_name in prod_types[table_name]:
 
                 prod_type = prod_types[table_name][column_name]
-                staging_type = staging_types[table_name][column_name]
-                dev_type = dev_types[table_name][column_name]
+                staging_type = staging_types.get(table_name, {}).get(column_name)
+                dev_type = dev_types.get(table_name, {}).get(column_name)
 
                 compatible_set = COMPATIBLE_TYPES.get(prod_type, {prod_type})
                 is_compatible_staging = (prod_type == staging_type) or (staging_type in compatible_set)
@@ -269,7 +269,10 @@ class StatisticalQualityCheck(BaseCheck):
                         column_name = sql.Literal(column)
                     ))
 
-                    column_type = cur.fetchone()[0]
+                    row = cur.fetchone()
+                    if not row:
+                        return []
+                    column_type = row[0]
 
                     if column_type in numeric_types:
 
