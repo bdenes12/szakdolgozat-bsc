@@ -18,6 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from pipelines.views import help_view
 
+admin.site.site_url = "/pipelines/"
+admin.site.site_header = "Anonimizáció admin"
+admin.site.index_title = "Modellek"
+
 urlpatterns = [
     path('pipelines/', include('pipelines.urls')),
     path('alerts/', include('alerts.urls')),

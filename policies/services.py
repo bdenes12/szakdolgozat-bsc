@@ -26,13 +26,23 @@ class PolicyService:
                     
                     all_column_names = cur.fetchall()
 
+                    cur.execute(sql.SQL("SELECT kcu.table_schema, kcu.table_name, kcu.column_name " \
+                    "FROM information_schema.table_constraints tc " \
+                    "JOIN information_schema.key_column_usage kcu " \
+                    "ON tc.constraint_name = kcu.constraint_name " \
+                    "AND tc.table_schema = kcu.table_schema " \
+                    "WHERE tc.table_schema = 'public' " \
+                    "AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY')"))
+
+                    pk_columns = set(cur.fetchall())
+
             active_policies = []
             policies = self.get_active_policies(environment)
             
             for policy in policies:
                 active_policies.append((policy.schema_name, policy.table_name, policy.column_name))
 
-            missing_policies = list(set(all_column_names) - set(active_policies))
+            missing_policies = list(set(all_column_names) - set(active_policies) - pk_columns)
             
         finally:
             if conn_prod:
