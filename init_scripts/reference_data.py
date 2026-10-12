@@ -26,7 +26,7 @@ STAY_DAYS_BY_TYPE = {
     "fekvőbeteg": (2, 14),
 }
 
-departments_data = [
+DEPARTMENTS_DATA = [
     ("Belgyógyászat", "A", 2, "201"),
     ("Sebészet", "A", 3, "305"),
     ("Kardiológia", "B", 1, "112"),
@@ -71,7 +71,7 @@ LAB_TESTS = [
     ("Bilirubin",         "umol/L",  12.0,  5.0),
 ]
 
-icd_codes_data= [
+ICD_CODES_DATA= [
     ("A09",   "Fertőzéses eredetű gastroenteritis",      "Fertőző betegségek",        False),
     ("B34.9", "Nem meghatározott vírusfertőzés",         "Fertőző betegségek",        False),
     ("C34.9", "Hörgő és tüdő rosszindulatú daganata",    "Daganatok",                 True),

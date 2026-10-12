@@ -16,9 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from pipelines.views import help_view
 
 urlpatterns = [
     path('pipelines/', include('pipelines.urls')),
     path('alerts/', include('alerts.urls')),
+    path('help/', help_view, name='help'),
     path('admin/', admin.site.urls),
 ]

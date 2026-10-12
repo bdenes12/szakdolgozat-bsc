@@ -11,18 +11,20 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
 
 ## Gyors indítás
 
+0. másold a `.env.example`-t `.env`-be és töltsd ki a megfelelő értékekkel
 1. `docker compose up -d`
 2. venv + `pip install -r requirements.txt`
 3. `python manage.py migrate`
 4. `python manage.py createsuperuser`
 5. `python manage.py seed_policies`
-6. `python .\init_scripts\seed_production.py`
+6. `python .\init_scripts\seed_production.py --patients 500`
 7. `python manage.py runserver`
 8. böngésző: `http://127.0.0.1:8000/pipelines/` (belépés: `http://127.0.0.1:8000/admin/login/`)
 
 ## Környezeti változók
 
 - `SECRET_KEY`, `ADMIN_DB_NAME`, `ADMIN_DB_USER`, `ADMIN_DB_PASSWORD`, `ADMIN_DB_HOST`, `ADMIN_DB_PORT`, `PRODUCTION_DSN`, `STAGING_DSN`, `DEV_DSN`
+
 
 ## Portok
 
@@ -42,10 +44,10 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
         - Itt létre tudunk hozni saját maszkolási stratégiát a kiválasztott maszkolási függvénnyel és, ha szükséges a megadott paraméterrel, amit később egy tábla egy oszlopán tudunk érvényesíteni
     - Django administration -> POLICIES -> Column policies
         - Itt tudjuk beállítani a kiválasztott tábla egy oszlopára a szabályunkat, meg kell adni a séma-, tábla-, oszlop nevet, a környezetet, ahol érvényesíteni szeretnénk a szabályt, az adatvédelmi kategóriát, a maszkolási stratégiát, STAGING környezet esetén a felhasználót ki kell választani, akire érvényes legyen a szabály és, hogy az alapértelmezetten végrehajtott validációs vizsgálaton felül kell-e statisztikai vagy értékátfedés vizsgálat
-        - Van lehetőség a program által generálni oszlop szabályokat is az adatbázsra, ezt a GENERATE SUGGESTION gomb megnyomásával lehet 
+        - Van lehetőség a program által generálni oszlop szabályokat is az adatbázisra, ezt a GENERATE SUGGESTION gomb megnyomásával lehet 
 - Főoldal:
     - ETL indítása! gomb egyszeri megnyomásával elindítjuk a folyamatot, ezzel érvénybe lépnek a környezeteken beállított szabályok
-    - Amikor az ETL folyamat befejezte a futását, akkor a Futások listában megjelenik, innen tuvább tudunk lépni a validációs eredményeket összefoglaló nézetre, valamint a HTML riport nézetre
+    - Amikor az ETL folyamat befejezte a futását, akkor a Futások listában megjelenik, innen tovább tudunk lépni a validációs eredményeket összefoglaló nézetre, valamint a HTML riport nézetre
 
 - Riport
     - Egy adott validációs futás részletes nézete, az eredmények tábla szinten csoportosítva vannak, az adott táblához hozzá van rendelve a kockázati szintje is
@@ -56,7 +58,7 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
 ## Tesztek
 
 `pytest -q`
-A jelenlegi tesztek a tiszta logikát és a webes nézeteket fedi, adatbázis-kapcsolat nélkül.
+A jelenlegi tesztek a tiszta logikát és a webes nézeteket fedik, adatbázis-kapcsolat nélkül.
 DSN/ETL nincs a pytestben.
 
 ## Projektstruktúra 

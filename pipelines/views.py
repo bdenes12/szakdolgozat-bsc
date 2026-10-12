@@ -90,3 +90,7 @@ def pipeline_report(request, my_id):
         raise Http404("Nincs validációs riport ehhez a futáshoz.")
 
     return HttpResponse(report.html_content)
+
+@login_required
+def help_view(request):
+    return render(request, "pipelines/help.html")

@@ -276,3 +276,22 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+.help-section {
+    margin-bottom: 1.75rem;
+}
+
+.help-section h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.5rem;
+}
+
+.help-section a {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.help-section a:hover {
+    text-decoration: underline;
+}
