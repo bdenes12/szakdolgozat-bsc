@@ -4,6 +4,9 @@ from psycopg2 import sql
 from itertools import groupby
 from policies.models import ColumnPolicy
 from policies.services import PolicyService
+from config.logger import setup_logger
+
+logger = setup_logger("anonymization", console=False)
 
 def build_mask_expression(policy_obj: ColumnPolicy):
 
@@ -53,6 +56,9 @@ def apply_staging_labels():
         dsn_staging = os.getenv("STAGING_DSN")
         conn_staging = psycopg2.connect(dsn_staging)
 
+        skipped = 0
+        applied = 0
+
         with conn_staging:
             with conn_staging.cursor() as cur:
 
@@ -78,6 +84,7 @@ def apply_staging_labels():
                 for policy in active_policies:
                     
                     if policy.masking_strategy is None:
+                        skipped += 1
                         continue
 
                     mask_exp = build_mask_expression(policy).as_string(cur)
@@ -85,6 +92,7 @@ def apply_staging_labels():
                     label = "MASKED WITH FUNCTION " + mask_exp
 
                     if not policy.masking_policy:
+                        skipped += 1
                         continue
 
                     cur.execute(sql.SQL("SECURITY LABEL FOR {masking_policy} ON COLUMN {schema_name}.{table_name}.{column_name} is {label} ").format(
@@ -94,6 +102,10 @@ def apply_staging_labels():
                         column_name = sql.Identifier(policy.column_name),
                         label = sql.Literal(label)
                     ))
+
+                    applied += 1
+
+                logger.info(f"STAGING címkék: {applied} felrakva")
 
     finally:
         if conn_staging:
@@ -109,6 +121,9 @@ def apply_policies():
     columns = []
 
     conn_staging = None
+
+    applied = 0
+    skipped = 0
 
     try:
         dsn_staging = os.getenv("STAGING_DSN")
@@ -135,6 +150,7 @@ def apply_policies():
                     for policy in policies:
                         
                         if policy.masking_strategy is None:
+                            skipped += 1
                             continue
                         
                         if sql.Identifier(policy.column_name) in columns:
@@ -144,6 +160,7 @@ def apply_policies():
                                 mask_exp,
                                 sql.Identifier(policy.column_name)
                             )
+                            applied += 1
 
                     cur_staging.execute(sql.SQL("DROP VIEW IF EXISTS dev_export.{table_name}").format(
                         table_name = sql.Identifier(table_name)
@@ -152,6 +169,9 @@ def apply_policies():
                     cur_staging.execute(sql.SQL("CREATE OR REPLACE VIEW dev_export.{table_name} AS SELECT {} FROM public.{table_name}").format(
                         sql.SQL(', ').join(columns),
                         table_name = sql.Identifier(table_name)))
+
+                logger.info(f"DEV nézetek: {applied} oszlop maszkolva")
+
     finally:
         if conn_staging:
             conn_staging.close()

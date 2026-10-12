@@ -8,28 +8,42 @@ from alerts.services import AlertService
 from alerts.models import Alert
 from validations.checks import RowCountCheck, ColumnTypeCheck, ValueOverlapCheck, StatisticalQualityCheck
 from validations.models import ValidationRun, ValidationResult, ValidationReport
+from config.logger import setup_logger
 
 
 class ValidationService:         
 
     def run_validation(self, pipeline_run: PipelineRun):
 
+        logger = setup_logger("validations", console=False)
+
         validation_run_obj = ValidationRun.objects.create(pipeline_run=pipeline_run, status=ValidationRun.ValidationRunStatuses.RUNNING)
+
+        logger.info(f"Validáció futás elindult - pipeline_id: {pipeline_run.id}")
 
         try:
             check_results = self.execute_checks()
             save_results = self.save_results(validation_run_obj, check_results)
             
+            fail_count = sum(1 for r in save_results if r.status == "FAIL")
+            logger.info(f"Checkek kész: {len(save_results)} eredmény, {fail_count} FAIL")
+            
             AlertService().create_alerts(validation_run_obj, save_results)
             
             environment, missing_policies = PolicyService().find_missing_policies(os.getenv("PRODUCTION_DSN"), ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
             AlertService().create_missing_policy_alerts(validation_run_obj, missing_policies, environment)
+            
+            if missing_policies:
+                logger.warning(f"Hiányzó policy: {len(missing_policies)} oszlop")
 
             self.generate_report(validation_run_obj)
+            logger.info(f"HTML riport mentve - validation_run_id: {validation_run_obj.id}")
 
             validation_run_obj.mark_completed()
+            logger.info(f"Validáció futás kész - pipeline_id: {pipeline_run.id}")
 
         except Exception as e:
+            logger.error(f"Validáció futás sikertelen - pipeline_id: {pipeline_run.id}", exc_info=True)
             validation_run_obj.mark_failed(str(e))
             raise
 
