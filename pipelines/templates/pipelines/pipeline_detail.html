@@ -2,53 +2,107 @@
 
 {% block content %}
 
-<h1>Pipeline: {{ pipeline.id }} - Pipeline státusz: {{ pipeline.status }}</h1>
+<section class="dashboard-runs">
+    <h1>Pipeline {{ pipeline.id }}</h1>
+    <p class="dashboard-hint">Státusz: {{ pipeline.status }}</p>
+    <p class="dashboard-actions">
+        <a class="button button--primary" href="{% url 'pipelines:pipeline-list' %}">Vissza</a>
+    </p>
+</section>
 
 {% if validation_run %}
-    <h2>Validáció futási adatok:</h2>
-    <p>{{ validation_run.status }} - {{ validation_run.started_at }} - {{ validation_run.finished_at }} -  {{ validation_run.error_message }}</p>
-    <a href="{% url 'pipelines:pipeline-report' pipeline.id %}">HTML riport</a>
-    
-    <h2>Létrejövő Alert-ek:</h2>
+    <div class="metric-card-grid">
+        <section class="dashboard-runs">
+            <h2>Validáció</h2>
+            <p class="dashboard-hint">{{ validation_run.status }} · {{ validation_run.started_at }} – {{ validation_run.finished_at }}</p>
+            <a class="button button--primary" href="{% url 'pipelines:pipeline-report' pipeline.id %}">HTML riport</a>
+        </section>
+        <article class="metric-card metric-card--alert">
+            <h3>Nyitott riasztások</h3>
+            <p>{{ not_resolved_alerts }}</p>
+            <a class="button button--primary" href="{% url 'alerts:alert-list' %}">Nyitott alertek</a>
+        </article>
+    </div>
 
-    <h3>Nyitott Alertek száma: {{ not_resolved_alerts }}</h3>
+    <section class="dashboard-runs">
+        <h2>CRITICAL / WARNING alertek</h2>
+        <table class="runs-table">
+            <thead>
+                <tr>
+                    <th>Típus</th>
+                    <th>Severity</th>
+                    <th>Séma</th>
+                    <th>Tábla</th>
+                    <th>Oszlop</th>
+                    <th>Üzenet</th>
+                    <th>Megoldva</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr>
+                    <td>{{ alert.alert_type }}</td>
+                    <td>{{ alert.severity }}</td>
+                    <td>{{ alert.schema_name }}</td>
+                    <td>{{ alert.table_name }}</td>
+                    <td>{{ alert.column_name }}</td>
+                    <td>{{ alert.message }}</td>
+                    <td>{{ alert.is_resolved }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="dashboard-empty">Nincs CRITICAL/WARNING alert.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
 
-    <a href="{% url 'alerts:alert-list' %}">Tovább a nyitott alert-ekre!</a>
-
-    <h3>CRITICAL vagy WARNING típusú alertek:</h3>
-    {% for alert in alerts %}
-        <p>{{ alert.alert_type }} - {{ alert.severity }} - {{ alert.table_name }} -  {{ alert.column_name }} - {{ alert.message }} - {{ alert.is_resolved }}</p>
-    {% endfor %}
-    <table>
-        <thead>
-            <tr>
-                <th>séma</th>
-                <th>tábla</th>
-                <th>oszlop</th>
-                <th>check_type</th>
-                <th>status</th>
-                <th>metrics</th>
-                <th>applied_thresholds</th>
-                <th>message</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for result in validation_results %}
-            <tr>
-                <td>{{ result.schema_name }}</td>
-                <td>{{ result.table_name }}</td>
-                <td>{{ result.column_name }}</td>
-                <td>{{ result.check_type }}</td>
-                <td>{{ result.status }}</td>
-                <td>{{ result.metrics }}</td>
-                <td>{{ result.applied_thresholds }}</td>
-                <td>{{ result.message }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <section class="dashboard-runs">
+        <h2>Validációs eredmények</h2>
+        <table class="runs-table">
+            <thead>
+                <tr>
+                    <th>Séma név</th>
+                    <th>Tábla név</th>
+                    <th>Oszlop név</th>
+                    <th>Ellenőrzés típusa</th>
+                    <th>Státusz</th>
+                    <th>Metrikák</th>
+                    <th>Küszöbértékek</th>
+                    <th>Üzenet</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in validation_results %}
+                <tr>
+                    <td>{{ result.schema_name }}</td>
+                    <td>{{ result.table_name }}</td>
+                    <td>{{ result.column_name }}</td>
+                    <td>{{ result.check_type }}</td>
+                    <td>{{ result.status }}</td>
+                    <td>
+                        {% for key, value in result.metrics.items %}
+                            <div><strong>{{ key }}:</strong> {{ value }}</div>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for key, value in result.applied_thresholds.items %}
+                            <div><strong>{{ key }}:</strong> {{ value }}</div>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+                    <td>{{ result.message }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+{% else %}
+    <p class="dashboard-empty">Ehhez a futáshoz még nincs validáció.</p>
 {% endif %}
-
-<p><a href="{% url 'pipelines:pipeline-list' %}">Vissza a Pipeline-okra!</a></p>
 
 {% endblock %}

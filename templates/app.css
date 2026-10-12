@@ -295,3 +295,34 @@ body {
 .help-section a:hover {
     text-decoration: underline;
 }
+
+.runs-table .cell-metrics {
+    font-size: 0.85rem;
+    word-break: break-word;
+    max-width: 220px;
+}
+
+.dashboard-runs {
+    margin-bottom: 1.5rem;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.metric-card-grid .metric-card--alert {
+    max-width: none;
+    margin-bottom: 1.5rem;
+}
+
+.dashboard-runs h1 {
+    margin: 0 0 0.35rem;
+    font-size: 1.5rem;
+}
+
+.dashboard-runs h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.15rem;
+}
