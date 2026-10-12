@@ -5,7 +5,10 @@ class DataCategory(models.Model):
     description = models.TextField(blank=True)
     maximum_overlap = models.DecimalField(max_digits=5, decimal_places=2)
     is_active = models.BooleanField(default=True)
-
+    
+    class Meta:
+        verbose_name_plural = "Data categories"
+    
     def __str__(self):
         return f"{self.name} - {self.description}"
 
@@ -23,6 +26,9 @@ class MaskingStrategy(models.Model):
     description = models.TextField(blank=True)
     parameters = models.JSONField(default=list, blank=True)
     anon_function = models.ForeignKey(AnonFunction, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = "Masking strategies"
 
     def __str__(self):
         return f"{self.name} - {self.description}"
@@ -49,6 +55,7 @@ class ColumnPolicy(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        verbose_name_plural = "Column policies"
         constraints = [
                 models.UniqueConstraint(fields=["schema_name", "table_name", "column_name", "target_environment", "masking_policy"], name="unique_policy")
             ]
