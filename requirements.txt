@@ -10,3 +10,5 @@ pytest==9.1.1
 pytest-django==4.12.0
 coverage==7.6.10
 faker==40.38.0
+scipy==1.15.3
+django-admin-extra-buttons==2.1.2

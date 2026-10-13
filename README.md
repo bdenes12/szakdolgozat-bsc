@@ -11,15 +11,16 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
 
 ## Gyors indítás
 
-0. másold a `.env.example`-t `.env`-be és töltsd ki a megfelelő értékekkel
-1. `docker compose up -d`
-2. venv + `pip install -r requirements.txt`
-3. `python manage.py migrate`
-4. `python manage.py createsuperuser`
-5. `python manage.py seed_policies`
-6. `python .\init_scripts\seed_production.py --patients 500`
-7. `python manage.py runserver`
-8. böngésző: `http://127.0.0.1:8000/pipelines/` (belépés: `http://127.0.0.1:8000/admin/login/`)
+0. másold a `.env.example`-t `.env`-be és töltsd ki (a compose a DSN-eket a `web` konténerben felülírja: `prod_db` / `staging_db` / `dev_db` / `admin_db`)
+1. `docker compose up -d --build`
+2. `docker compose exec web python manage.py createsuperuser`
+3. `docker compose exec web python manage.py seed_policies`
+4. `docker compose exec web python init_scripts/seed_production.py --patients 500`
+5. böngésző: `http://127.0.0.1:8000/pipelines/` (belépés: `http://127.0.0.1:8000/admin/login/`)
+
+A `migrate` a `web` indulásakor lefut. Hostos venv + `runserver` nem kell a demóhoz. Pytesthez továbbra is venv: `pip install -r requirements.txt`, majd `pytest -q`.
+`docker compose down` leállít, a volume-ok megmaradnak, volume törlés esetén, hogy tiszta sémát kapjunk: `docker compose down -v`.
+A docker compose a felépítése szerint csillagpontos hálózati architektúra, ahol a négy adatbázis teljesen el van szigetelve egymástól, és kizárólag a mindegyikükhöz hozzáférő, web konténeren keresztül képesek az adatáramlásra.
 
 ## Környezeti változók
 

@@ -1,4 +1,5 @@
 import os
+import psycopg2
 from django.template.loader import render_to_string
 from collections import defaultdict
 from pipelines.models import PipelineRun
@@ -9,6 +10,7 @@ from alerts.models import Alert
 from validations.checks import RowCountCheck, ColumnTypeCheck, ValueOverlapCheck, StatisticalQualityCheck
 from validations.models import ValidationRun, ValidationResult, ValidationReport
 from config.logger import setup_logger
+from sqlalchemy.exc import OperationalError as SQLAlchemyOperationalError
 
 
 class ValidationService:         
@@ -42,6 +44,10 @@ class ValidationService:
             validation_run_obj.mark_completed()
             logger.info(f"Validáció futás kész - pipeline_id: {pipeline_run.id}")
 
+        except (psycopg2.OperationalError, SQLAlchemyOperationalError) as e:
+            logger.error(f"Adatbázis nem érhető el - pipeline_id: {validation_run_obj.pipeline_run.id}")
+            validation_run_obj.mark_failed(err_message=str(e))
+            raise
         except Exception as e:
             logger.error(f"Validáció futás sikertelen - pipeline_id: {pipeline_run.id}", exc_info=True)
             validation_run_obj.mark_failed(str(e))
@@ -84,10 +90,7 @@ class ValidationService:
 
         return validationresults
 
-    def risk_level(self, results):
-
-        has_fail = False
-        has_missing_policy_alert = False
+    def risk_level(self, results, schema, table):
 
         for result in results:
             if result.check_type == ValidationResult.CheckTypes.VALUE_OVERLAP and result.status == ValidationResult.ValidationResultStatuses.FAIL:
@@ -95,14 +98,8 @@ class ValidationService:
 
             if result.check_type in (ValidationResult.CheckTypes.STATISTICAL, ValidationResult.CheckTypes.ROW_COUNT, ValidationResult.CheckTypes.COLUMN_TYPE) and result.status == ValidationResult.ValidationResultStatuses.FAIL:
                 return "KÖZEPES"
-
-            if result.status == ValidationResult.ValidationResultStatuses.FAIL:
-                has_fail = True
-
-            if Alert.AlertType.MISSING_POLICY == Alert.objects.filter(validation_result=result).values_list("alert_type", flat=True).first():
-                has_missing_policy_alert = True
-
-        if has_fail and has_missing_policy_alert:
+            
+        if results and Alert.objects.filter(validation_run=results[0].validation_run, schema_name=schema, table_name=table, alert_type=Alert.AlertType.MISSING_POLICY).exists():
             return "ALACSONY"
 
         return "NINCS"
@@ -137,7 +134,7 @@ class ValidationService:
             tables.append({
                 "schema_name": schema_table[0],
                 "table_name": schema_table[1],
-                "risk": self.risk_level(result_list),
+                "risk": self.risk_level(result_list, schema_table[0], schema_table[1]),
                 "results": result_list,
             })
 

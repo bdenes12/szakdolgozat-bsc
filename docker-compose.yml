@@ -9,6 +9,13 @@ services:
       - "5438:5432"
     volumes:
       - admin_db_data:/var/lib/postgresql/data
+    networks:
+      - net_admin
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U denes_pg -d admin_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   prod_db:
     image: postgres:16
@@ -21,6 +28,13 @@ services:
     volumes:
       - prod_db_data:/var/lib/postgresql/data
       - ./sql/production:/docker-entrypoint-initdb.d
+    networks:
+      - net_prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_pg -d prod"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   
   staging_db:
     image: registry.gitlab.com/dalibo/postgresql_anonymizer:stable
@@ -34,6 +48,13 @@ services:
     volumes:
       - staging_db_data:/var/lib/postgresql/data
       - ./sql/staging:/docker-entrypoint-initdb.d
+    networks:
+      - net_staging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_pg -d staging"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   dev_db:
     image: postgres:16
@@ -45,9 +66,64 @@ services:
       - "5436:5432"
     volumes:
       - dev_db_data:/var/lib/postgresql/data
+    networks:
+      - net_dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_pg -d dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      ADMIN_DB_NAME: ${ADMIN_DB_NAME}
+      ADMIN_DB_USER: ${ADMIN_DB_USER}
+      ADMIN_DB_PASSWORD: ${ADMIN_DB_PASSWORD}
+      ADMIN_DB_HOST: admin_db
+      ADMIN_DB_PORT: "5432"
+      PRODUCTION_DSN: postgresql://user_pg:password_pg@prod_db:5432/prod
+      STAGING_DSN: postgresql://user_pg:password_pg@staging_db:5432/staging
+      DEV_DSN: postgresql://user_pg:password_pg@dev_db:5432/dev
+    depends_on:
+      prod_db:
+        condition: service_healthy
+      staging_db:
+        condition: service_healthy
+      dev_db:
+        condition: service_healthy
+      admin_db:
+        condition: service_started
+    volumes:
+      - ./logs:/app/logs
+    networks:
+    - net_prod
+    - net_staging
+    - net_dev
+    - net_admin
+    command: >
+      sh -c "python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8000"
 
 volumes:
   staging_db_data:
   dev_db_data:
   admin_db_data:
   prod_db_data:
+
+networks:
+  net_prod:
+    driver: bridge
+  net_staging:
+    driver: bridge
+  net_dev:
+    driver: bridge
+  net_admin:
+    driver: bridge

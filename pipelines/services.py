@@ -1,8 +1,10 @@
+import psycopg2
 from .models import PipelineRun
 from .dlt_adapter import prod_to_staging, staging_to_dev
 from anonymization.services import apply_policies, apply_staging_labels
 from validations.services import ValidationService
 from config.logger import setup_logger
+from sqlalchemy.exc import OperationalError as SQLAlchemyOperationalError
 
 class PipelineService:
 
@@ -32,6 +34,10 @@ class PipelineService:
 
             return pipeline_obj
         
+        except (psycopg2.OperationalError, SQLAlchemyOperationalError) as e:
+            logger.error(f"Adatbázis nem érhető el - pipeline_id: {pipeline_obj.id}")
+            pipeline_obj.mark_failed(err_message=str(e))
+            return pipeline_obj
         except Exception as e:
             logger.error(f"Pipeline futás sikertelen - pipeline_id: {pipeline_obj.id}", exc_info=True)
             pipeline_obj.mark_failed(err_message=str(e))
