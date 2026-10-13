@@ -20,12 +20,12 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
 
 A `migrate` a `web` indulásakor lefut. Hostos venv + `runserver` nem kell a demóhoz. Pytesthez továbbra is venv: `pip install -r requirements.txt`, majd `pytest -q`.
 `docker compose down` leállít, a volume-ok megmaradnak, volume törlés esetén, hogy tiszta sémát kapjunk: `docker compose down -v`.
-A docker compose a felépítése szerint csillagpontos hálózati architektúra, ahol a négy adatbázis teljesen el van szigetelve egymástól, és kizárólag a mindegyikükhöz hozzáférő, web konténeren keresztül képesek az adatáramlásra.
+A Docker Compose felépítése csillagpontos (star) hálózat: a négy adatbázis-konténer külön hálózaton van, egymástól elszigetelve. Közöttük nincs útvonal, az adatmozgatást kizárólag a minden hálózatra kapcsolt web konténer (Django + ETL) végzi.
+A host a publikált porton továbbra is elérheti a DB-ket.
 
 ## Környezeti változók
 
 - `SECRET_KEY`, `ADMIN_DB_NAME`, `ADMIN_DB_USER`, `ADMIN_DB_PASSWORD`, `ADMIN_DB_HOST`, `ADMIN_DB_PORT`, `PRODUCTION_DSN`, `STAGING_DSN`, `DEV_DSN`
-
 
 ## Portok
 
