@@ -1,5 +1,6 @@
 import psycopg2
 import numpy as np
+import pandas as pd
 from scipy.stats import ks_2samp
 from psycopg2 import sql
 from validations.models import ValidationResult
@@ -317,6 +318,32 @@ class StatisticalQualityCheck(BaseCheck):
             if conn:
                 conn.close()
 
+    def _histogram_metrics(self, prod_values, dev_values):
+        
+        if len(prod_values) < 2 or len(dev_values) < 2:
+            return None
+
+        merged_list = [*prod_values, *dev_values]
+        min_value = min(merged_list)
+        max_value = max(merged_list)
+
+        if min_value == max_value:
+            return None
+
+        prod_counts, bin_edges = np.histogram(prod_values, bins=10, range=(min_value, max_value))
+        dev_counts, _ = np.histogram(dev_values, bins=10, range=(min_value, max_value))
+
+        labels = []
+        for i in range(len(bin_edges) - 1):
+            labels.append(f"{round(bin_edges[i], 2)} - {round(bin_edges[i + 1], 2)}")
+
+        return {
+            "prod_histogram": prod_counts.tolist(),
+            "dev_histogram": dev_counts.tolist(),
+            "labels": labels
+        }
+
+
     def compare_means(self, prod_values, dev_values):
 
         np_prod_values = np.array(prod_values)
@@ -498,6 +525,9 @@ class StatisticalQualityCheck(BaseCheck):
 
             if "mean_rel_error" not in metrics and "std_rel_error" not in metrics and "ks_statistic" not in metrics and "entropy_rel_error" not in metrics:
                 continue
+
+            histogram_metrics = self._histogram_metrics(prod, dev)
+            metrics.update(histogram_metrics or {})
 
             results.append({
                 "schema_name": policy.schema_name,

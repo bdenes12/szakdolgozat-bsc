@@ -37,28 +37,6 @@
             </div>
         </section>
 
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const ctx_check = document.getElementById("checkChart").getContext("2d");
-                new Chart(ctx_check, {
-                    type:'bar',
-                    data: {
-                        labels: ['ROW_COUNT', 'COLUMN_TYPE', 'VALUE_OVERLAP', 'STATISTICAL'],
-                        datasets: [{
-                            data: [{{ fail_row_count }}, {{ fail_column_type }}, {{ fail_value_overlap }}, {{ fail_statistical }}],
-                            backgroundColor: 'rgb(31, 41, 55)'
-                        }]
-                    },
-                    options: {
-                        plugins: {
-                            legend: { display: false }
-                        }
-                    }
-                })
-            })
-        </script>
-
         {% for table in tables %}
             <section class="dashboard-runs">
                 <h2>{{ table.schema_name }}.{{ table.table_name }} — Kockázat: {{ table.risk }}</h2>
@@ -98,6 +76,15 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                
+                {% for result in table.results %}
+                    {% if result.metrics.prod_histogram %}
+                        <div class="chart-panel">
+                            <h3>Hisztogram: {{ result.column_name }} — eloszlás (prod vs dest)</h3>
+                            <canvas id="hist-{{ result.id }}"></canvas>
+                        </div>
+                    {% endif %}
+                {% endfor %}
 
                 <table class="runs-table">
                     <thead>
@@ -110,21 +97,79 @@
                     </thead>
                     <tbody>
                         {% for alert in table.alerts %}
-                        <tr>
-                            <td>{{ alert.alert_type }}</td>
-                            <td>{{ alert.severity }}</td>
-                            <td>{{ alert.column_name }}</td>
-                            <td>{{ alert.message }}</td>
-                        </tr>
+                            <tr>
+                                <td>{{ alert.alert_type }}</td>
+                                <td>{{ alert.severity }}</td>
+                                <td>{{ alert.column_name }}</td>
+                                <td>{{ alert.message }}</td>
+                            </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="4" class="dashboard-empty">Nincs riasztás.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="4" class="dashboard-empty">Nincs riasztás.</td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-
             </section>
         {% endfor %}
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const ctx_check = document.getElementById("checkChart").getContext("2d");
+                new Chart(ctx_check, {
+                    type:'bar',
+                    data: {
+                        labels: ['ROW_COUNT', 'COLUMN_TYPE', 'VALUE_OVERLAP', 'STATISTICAL'],
+                        datasets: [{
+                            data: [{{ fail_row_count }}, {{ fail_column_type }}, {{ fail_value_overlap }}, {{ fail_statistical }}],
+                            backgroundColor: 'rgb(31, 41, 55)'
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                })
+
+                {% for table in tables %}
+                    {% for result in table.results %}
+                        {% if result.metrics.prod_histogram %}
+
+                            const ctx_histogram = document.getElementById("hist-{{ result.id }}").getContext("2d");
+                            new Chart(ctx_histogram, {
+                                type: 'bar',
+                                data: {
+                                    labels: {{ result.metrics.labels|safe }},
+                                    datasets: [
+                                        {
+                                            label: 'Prod',
+                                            data: {{ result.metrics.prod_histogram|safe }},
+                                            backgroundColor: 'rgba(31, 41, 55, 0.5)',
+                                            borderColor: 'rgb(31, 41, 55)',
+                                            borderWidth: 1
+                                        },
+                                        {
+                                            label: 'Dev',
+                                            data: {{ result.metrics.dev_histogram|safe }},
+                                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                            borderColor: 'rgb(59, 130, 246)',
+                                            borderWidth: 1
+                                        }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: "bottom" } },
+                                    scales: { y: { beginAtZero: true } }
+                                }
+                            })
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            })
+        </script>
     </main>
 </body>

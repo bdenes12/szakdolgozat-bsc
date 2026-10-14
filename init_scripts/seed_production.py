@@ -213,7 +213,7 @@ def insert_invoices(cur: psycopg2.extensions.cursor, encounter_ids):
     invoices_data = []
     for id in encounter_ids:
         payment_status = random.choice(PAYMENT_STATUSES)
-        total_amount = random.gauss(80000, 25000)
+        total_amount = max(0, random.gauss(80000, 25000))
         paid_amount = total_amount if payment_status=="kifizetett" else (total_amount / 2 if payment_status=="részben fizetett" else 0)
         invoices_data.append(
             (
@@ -254,7 +254,7 @@ def fill_prod_database(patient_number):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fill PROD database with fake data")
-    parser.add_argument("-p", "--patients", type=int, default=500)
+    parser.add_argument("-p", "--patients", type=int, default=5000)
     args = parser.parse_args()
     truncate_prod_database_data()
     fill_prod_database(args.patients)

@@ -103,6 +103,7 @@ services:
         condition: service_started
     volumes:
       - ./logs:/app/logs
+      - .:/app
     networks:
     - net_prod
     - net_staging
@@ -110,7 +111,7 @@ services:
     - net_admin
     command: >
       sh -c "python manage.py migrate &&
-            python manage.py runserver 0.0.0.0:8000"
+            python manage.py runserver 0.0.0.0:8000 --noreload"
 
 volumes:
   staging_db_data:
