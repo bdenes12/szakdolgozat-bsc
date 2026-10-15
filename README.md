@@ -18,10 +18,11 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
 4. `docker compose exec web python init_scripts/seed_production.py --patients 500`
 5. böngésző: `http://127.0.0.1:8000/pipelines/` (belépés: `http://127.0.0.1:8000/admin/login/`)
 
-A `migrate` a `web` indulásakor lefut. Hostos venv + `runserver` nem kell a demóhoz. Pytesthez továbbra is venv: `pip install -r requirements.txt`, majd `pytest -q`.
-`docker compose down` leállít, a volume-ok megmaradnak, volume törlés esetén, hogy tiszta sémát kapjunk: `docker compose down -v`.
-A Docker Compose felépítése csillagpontos (star) hálózat: a négy adatbázis-konténer külön hálózaton van, egymástól elszigetelve. Közöttük nincs útvonal, az adatmozgatást kizárólag a minden hálózatra kapcsolt web konténer (Django + ETL) végzi.
-A host a publikált porton továbbra is elérheti a DB-ket.
+A `migrate` a `web` konténer indulásakor lefut; a demóhoz nem kell hostos `runserver`.
+
+**Leállítás:** `docker compose down` megőrzi az adatokat. Tiszta 0-ról indítás (üres sémák): `docker compose down -v`, majd újra az 1–5. lépés.
+
+**Hálózat:** a négy adatbázis külön Docker-hálózaton van (csillag topológia), egymást nem érik el. Az ETL-t a mind a négy hálózatra kapcsolt `web` végzi. A host a táblázatban lévő portokon továbbra is csatlakozhat a DB-khez.
 
 ## Környezeti változók
 

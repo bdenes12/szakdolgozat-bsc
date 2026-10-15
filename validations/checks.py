@@ -232,7 +232,10 @@ class ValueOverlapCheck(BaseCheck):
             if metrics is None:
                 continue
 
-            threshold = float(policy.data_category.maximum_overlap)
+            if policy.data_category is None:
+                continue
+            else:
+                threshold = float(policy.data_category.maximum_overlap)
 
             results.append({
                 "schema_name": policy.schema_name,
@@ -356,10 +359,11 @@ class StatisticalQualityCheck(BaseCheck):
         else:
             prod_mean = float(np.mean(np_prod_values))
             dev_mean = float(np.mean(np_dev_values)) 
-            mean_rel_error = float(round(abs(dev_mean - prod_mean)/abs(prod_mean), 3))
-
-        if prod_mean == 0:
-            mean_rel_error = None            
+            
+            if prod_mean != 0:
+                mean_rel_error = float(round(abs(dev_mean - prod_mean)/abs(prod_mean), 3))
+            else:
+                mean_rel_error = None     
 
         return {
             "prod_mean": prod_mean,
@@ -379,10 +383,10 @@ class StatisticalQualityCheck(BaseCheck):
         else:
             prod_std = float(np.std(np_prod_values, ddof=0))
             dev_std = float(np.std(np_dev_values, ddof=0))
-            std_rel_error = float(round(abs(dev_std - prod_std)/abs(prod_std), 3))    
-
-        if prod_std == 0:
-            std_rel_error = None            
+            if prod_std != 0:
+                std_rel_error = float(round(abs(dev_std - prod_std)/abs(prod_std), 3))               
+            else:
+                std_rel_error = None
 
         return {
             "prod_std": prod_std,

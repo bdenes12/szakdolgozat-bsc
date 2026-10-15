@@ -36,7 +36,7 @@ def build_mask_expression(policy_obj: ColumnPolicy):
 
             mark_exp = sql.SQL("{}.{}({})").format(schema, name, sql.SQL(", ").join(anon_func_args))
 
-    elif not is_column_name_parameter and not parameters_list:
+    elif not is_column_name_parameter and parameters_list:
         for parameter in parameters_list:
             anon_func_args.append(sql.Literal(parameter))
 
@@ -144,7 +144,7 @@ def apply_policies():
                 for table_name, policy in groupby(active_policies, key = lambda x: x.table_name):
                     active_policies_by_tables[table_name] = list(policy)
 
-                cur_staging.execute(sql.SQL("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"))
+                cur_staging.execute(sql.SQL("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name NOT LIKE '_dlt_%'"))
                 table_names = [row[0] for row in cur_staging.fetchall()]
 
                 for table_name in table_names:

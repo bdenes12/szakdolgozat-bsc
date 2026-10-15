@@ -100,7 +100,7 @@ services:
       dev_db:
         condition: service_healthy
       admin_db:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./logs:/app/logs
       - .:/app

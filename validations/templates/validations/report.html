@@ -59,7 +59,9 @@
                                 <td>{{ result.status }}</td>
                                 <td>
                                     {% for key, value in result.metrics.items %}
-                                        <div><strong>{{ key }}:</strong> {{ value }}</div>
+                                        {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
+                                            <div><strong>{{ key }}:</strong> {{ value }}</div>
+                                        {% endif %}
                                     {% empty %}
                                         -
                                     {% endfor %}
@@ -137,8 +139,8 @@
                     {% for result in table.results %}
                         {% if result.metrics.prod_histogram %}
 
-                            const ctx_histogram = document.getElementById("hist-{{ result.id }}").getContext("2d");
-                            new Chart(ctx_histogram, {
+                            const ctx_histogram_{{ result.id }} = document.getElementById("hist-{{ result.id }}").getContext("2d");
+                            new Chart(ctx_histogram_{{ result.id }}, {
                                 type: 'bar',
                                 data: {
                                     labels: {{ result.metrics.labels|safe }},

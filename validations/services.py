@@ -92,9 +92,10 @@ class ValidationService:
 
     def risk_level(self, results, schema, table):
 
+        if ValidationResult.objects.filter(validation_run=results[0].validation_run, schema_name=schema, table_name=table, check_type=ValidationResult.CheckTypes.VALUE_OVERLAP, status=ValidationResult.ValidationResultStatuses.FAIL).exists():
+            return "MAGAS"
+        
         for result in results:
-            if result.check_type == ValidationResult.CheckTypes.VALUE_OVERLAP and result.status == ValidationResult.ValidationResultStatuses.FAIL:
-                return "MAGAS"
 
             if result.check_type in (ValidationResult.CheckTypes.STATISTICAL, ValidationResult.CheckTypes.ROW_COUNT, ValidationResult.CheckTypes.COLUMN_TYPE) and result.status == ValidationResult.ValidationResultStatuses.FAIL:
                 return "KÖZEPES"
