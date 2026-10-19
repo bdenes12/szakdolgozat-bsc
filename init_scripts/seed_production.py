@@ -153,7 +153,7 @@ def insert_encounters(cur: psycopg2.extensions.cursor, patient_ids, practitioner
         practitioner_id_and_dept_id = random.choice(practitioners)
 
         types, weights = zip(*ENCOUNTER_TYPES)
-        encounter_type = random.choices(types, weights=weights)[0] # a [0] azért kell, hogy ne listát adjon vissza
+        encounter_type = random.choices(types, weights=weights)[0]
 
         admitted_at = faker.date_time_between(start_date='-2y', end_date='now') 
         discharged_at = faker.date_time_between(start_date=admitted_at, end_date=admitted_at + timedelta(days=random.randint(STAY_DAYS_BY_TYPE[encounter_type][0], STAY_DAYS_BY_TYPE[encounter_type][1])))

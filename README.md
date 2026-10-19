@@ -11,7 +11,7 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
 
 ## Gyors indítás
 
-0. másold a `.env.example`-t `.env`-be és töltsd ki (a compose a DSN-eket a `web` konténerben felülírja: `prod_db` / `staging_db` / `dev_db` / `admin_db`)
+0. másold a `.env.example`-t `.env`-be és töltsd ki
 1. `docker compose up -d --build`
 2. `docker compose exec web python manage.py createsuperuser`
 3. `docker compose exec web python manage.py seed_policies`

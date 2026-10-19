@@ -28,7 +28,7 @@
                 </form>
             </td>
             <td>
-                <a href="{% url 'pipelines:pipeline-detail' alert.validation_run.pipeline_run_id %}">Hozzá tartozó pipeline! - Pipeline ID: {{ alert.validation_run.pipeline_run_id }}</a>
+                <a href="{% url 'pipelines:pipeline-detail' alert.validation_run.pipeline_run_id %}">Pipeline ID: {{ alert.validation_run.pipeline_run_id }}</a>
             </td>
         </tr>
         {% empty %}
