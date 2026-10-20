@@ -83,16 +83,16 @@
                     <td>{{ result.status }}</td>
                     <td>
                         {% for key, value in result.metrics.items %}
-                            <div><strong>{{ key }}:</strong> {{ value }}</div>
+                            {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
+                                <div><strong>{{ key }}:</strong> {{ value }}</div>
+                            {% endif %}
                         {% empty %}
                             -
                         {% endfor %}
                     </td>
                     <td>
                         {% for key, value in result.applied_thresholds.items %}
-                            {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
-                                <div><strong>{{ key }}:</strong> {{ value }}</div>
-                            {% endif %}
+                            <div><strong>{{ key }}:</strong> {{ value }}</div>
                         {% empty %}
                             -
                         {% endfor %}

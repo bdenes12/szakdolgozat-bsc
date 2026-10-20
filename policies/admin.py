@@ -55,7 +55,7 @@ def accept_suggestion(modeladmin, request, queryset):
 
 @admin.register(PolicySuggestion)
 class PolicySuggestionAdmin(admin.ModelAdmin):
-    list_display = ["__str__", "reason", "is_pk", "is_fk", "suggested_category", "suggested_strategy"]
+    list_display = ["__str__", "reason", "suggested_category", "suggested_strategy"]
     list_filter = ["status", "suggested_category"]
     list_select_related = ["suggested_category", "suggested_strategy"]
     readonly_fields = ["schema_name", "table_name", "column_name", "data_type", "is_pk", "is_fk", "reason", "status", "created_at"]

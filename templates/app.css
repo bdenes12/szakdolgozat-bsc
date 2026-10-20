@@ -189,6 +189,8 @@ body {
 
 .metric-card--alert {
     border-top-color: var(--color-alert);
+    max-width: 280px;
+    margin-bottom: 1rem;
 }
 
 .chart-grid {
@@ -263,6 +265,7 @@ body {
 }
 
 @media (max-width: 900px) {
+    .metric-card-grid,
     .chart-grid {
         grid-template-columns: 1fr 1fr;
     }
@@ -308,6 +311,11 @@ body {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
+}
+
+.metric-card-grid .metric-card--alert {
+    max-width: none;
+    margin-bottom: 1.5rem;
 }
 
 .dashboard-runs h1 {
