@@ -16,7 +16,7 @@ class AlertAdmin(admin.ModelAdmin):
     ]
     list_filter = ["severity", "is_resolved", "created_at"]
     search_fields = ["schema_name", "table_name", "column_name"]
-    
+
     def has_add_permission(self, request, obj=None):
         return False
 

@@ -72,7 +72,7 @@ def reject_suggestion(modeladmin, request, queryset):
 @admin.action(description="Javaslat elfogadása")
 def accept_suggestion(modeladmin, request, queryset):
     ok, skipped = SuggestionService().accept_suggestion(queryset)
-    modeladmin.message_user(request, f"{ok}db javaslat elfogadva, {skipped}db javaslat kihagyva!")
+    modeladmin.message_user(request, f"{ok} db javaslat elfogadva, {skipped} db javaslat kihagyva!")
 
 
 @admin.register(PolicySuggestion)

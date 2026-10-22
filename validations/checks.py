@@ -112,9 +112,9 @@ class RowCountCheck(BaseCheck):
                         "dev_table_count": dev_table_count,
                     },
                     "applied_thresholds": {},
-                    "message": "Row counts match"
+                    "message": "A sorok száma egyezik"
                     if prod_table_count == staging_table_count == dev_table_count
-                    else "Row counts mismatch",
+                    else "A sorok száma nem egyezik",
                     "column_policy": None,
                 }
             )
@@ -177,9 +177,9 @@ class ColumnTypeCheck(BaseCheck):
                             "dev_type": dev_type,
                         },
                         "applied_thresholds": {},
-                        "message": "Column types compatible"
+                        "message": "Kompatibilis oszloptípusok"
                         if is_compatible_staging and is_compatible_dev
-                        else "Column types mismatch",
+                        else "Nem kompatibilis típusok",
                         "column_policy": None,
                     }
                 )
@@ -263,9 +263,9 @@ class ValueOverlapCheck(BaseCheck):
                     else ValidationResult.ValidationResultStatuses.FAIL,
                     "metrics": metrics,
                     "applied_thresholds": {"maximum_overlap": threshold},
-                    "message": "The overlap is below the permitted value"
+                    "message": "Az átfedés a megengedett határon belül"
                     if metrics["overlap_ratio"] <= threshold
-                    else f"Overlap {metrics['overlap_ratio']} exceeds {threshold}",
+                    else f"Az átfedés {metrics['overlap_ratio']}% (megengedett: {threshold})%",
                     "column_policy": policy,
                 }
             )
@@ -372,8 +372,8 @@ class StatisticalQualityCheck(BaseCheck):
             prod_mean = None
             dev_mean = None
         else:
-            prod_mean = float(np.mean(np_prod_values))
-            dev_mean = float(np.mean(np_dev_values))
+            prod_mean = round(float(np.mean(np_prod_values)), 3)
+            dev_mean = round(float(np.mean(np_dev_values)), 3)
 
             if prod_mean != 0:
                 mean_rel_error = float(round(abs(dev_mean - prod_mean) / abs(prod_mean), 3))
@@ -391,8 +391,8 @@ class StatisticalQualityCheck(BaseCheck):
             prod_std = None
             dev_std = None
         else:
-            prod_std = float(np.std(np_prod_values, ddof=0))
-            dev_std = float(np.std(np_dev_values, ddof=0))
+            prod_std = round(float(np.std(np_prod_values, ddof=0)), 3)
+            dev_std = round(float(np.std(np_dev_values, ddof=0)), 3)
             if prod_std != 0:
                 std_rel_error = float(round(abs(dev_std - prod_std) / abs(prod_std), 3))
             else:
@@ -474,7 +474,7 @@ class StatisticalQualityCheck(BaseCheck):
                     if mean_rel_error is not None:
                         metrics.update(mean)
                         if mean_rel_error > max_mean_rel_error:
-                            failed.append(f"Mean rel error {mean_rel_error} exceeds {max_mean_rel_error} !")
+                            failed.append(f"Átlag relatív eltérése {mean_rel_error} (max. {max_mean_rel_error})")
 
             if std_enabled:
                 max_std_rel_error = spec["std"].get("max_rel_error") or 0.25
@@ -486,7 +486,7 @@ class StatisticalQualityCheck(BaseCheck):
                     if std_rel_error is not None:
                         metrics.update(std)
                         if std_rel_error > max_std_rel_error:
-                            failed.append(f"Std rel error {std_rel_error} exceeds {max_std_rel_error} !")
+                            failed.append(f"Szórás relatív eltérése {std_rel_error} (max. {max_std_rel_error})")
 
             if ks_enabled:
                 max_statistic = spec["ks"].get("max_statistic") or 0.20
@@ -502,10 +502,10 @@ class StatisticalQualityCheck(BaseCheck):
 
                     if ks_statistic is not None:
                         metrics.update(distributions)
-                        if ks_statistic > max_statistic or ks_pvalue < min_pvalue:
-                            failed.append(
-                                f"KS statistic or pvalue error ks_statistic: {ks_statistic} -  max_statistic: {max_statistic} ; ks_pvalue: {ks_pvalue} - min_pvalue: {min_pvalue} !"
-                            )
+                        if ks_statistic > max_statistic:
+                            failed.append(f"KS-távolság {ks_statistic} (max. {max_statistic})")
+                        if ks_pvalue < min_pvalue:
+                            failed.append(f"KS p-érték {ks_pvalue} (min. {min_pvalue})")
 
             if entropy_enabled:
                 prod_counts = self._value_counts(self.prod_dsn, schema, table, column)
@@ -525,7 +525,7 @@ class StatisticalQualityCheck(BaseCheck):
                     metrics["entropy_rel_error"] = entropy_rel_error
 
                     if entropy_rel_error > max_entropy_rel_error:
-                        failed.append(f"Entropy rel error {entropy_rel_error} exceeds {max_entropy_rel_error} !")
+                        failed.append(f"Entrópia relatív eltérése {entropy_rel_error} (max. {max_entropy_rel_error})")
 
             if (
                 "mean_rel_error" not in metrics
@@ -549,7 +549,7 @@ class StatisticalQualityCheck(BaseCheck):
                     else ValidationResult.ValidationResultStatuses.FAIL,
                     "metrics": metrics,
                     "applied_thresholds": applied_thresholds,
-                    "message": "; ".join(failed) if failed else "Statistical checks within limits",
+                    "message": "; ".join(failed) if failed else "A statisztikai eltérések a határon belül",
                     "column_policy": policy,
                 }
             )

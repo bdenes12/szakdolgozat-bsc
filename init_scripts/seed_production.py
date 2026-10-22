@@ -53,7 +53,7 @@ def truncate_prod_database_data():
         conn.close()
 
     except psycopg2.OperationalError as e:
-        print(f"The error '{e}' occurred!")
+        print(f"Hiba történt: {e}")
 
 
 def generate_taj_number():
@@ -320,7 +320,7 @@ def fill_prod_database(patient_number):
         conn.commit()
 
     except psycopg2.OperationalError as e:
-        print(f"The error '{e}' occurred!")
+        print(f"Hiba történt: {e}")
 
     finally:
         if conn:

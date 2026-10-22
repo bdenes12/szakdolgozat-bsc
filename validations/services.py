@@ -2,7 +2,9 @@ import os
 from collections import defaultdict
 
 import psycopg2
+from django.db import transaction
 from django.template.loader import render_to_string
+from django.utils import timezone
 from sqlalchemy.exc import OperationalError as SQLAlchemyOperationalError
 
 from alerts.models import Alert
@@ -12,6 +14,7 @@ from pipelines.models import PipelineRun
 from policies.models import ColumnPolicy
 from policies.services import PolicyService
 from validations.checks import ColumnTypeCheck, RowCountCheck, StatisticalQualityCheck, ValueOverlapCheck
+from validations.labels import METRIC_LABELS
 from validations.models import ValidationReport, ValidationResult, ValidationRun
 
 
@@ -27,32 +30,34 @@ class ValidationService:
 
         try:
             check_results = self.execute_checks()
-            save_results = self.save_results(validation_run_obj, check_results)
-
-            fail_count = sum(1 for r in save_results if r.status == "FAIL")
-            logger.info(f"Checkek kész: {len(save_results)} eredmény, {fail_count} FAIL")
-
-            AlertService().create_alerts(validation_run_obj, save_results)
-
             environment, missing_policies = PolicyService().find_missing_policies(
                 os.getenv("PRODUCTION_DSN"), ColumnPolicy.EnvironmentTypes.DEVELOPMENT
             )
-            AlertService().create_missing_policy_alerts(validation_run_obj, missing_policies, environment)
 
-            if missing_policies:
-                logger.warning(f"Hiányzó policy: {len(missing_policies)} oszlop")
+            with transaction.atomic():
+                save_results = self.save_results(validation_run_obj, check_results)
 
-            self.generate_report(validation_run_obj)
-            logger.info(f"HTML riport mentve - validation_run_id: {validation_run_obj.id}")
+                fail_count = sum(1 for r in save_results if r.status == "FAIL")
+                logger.info(f"Checkek kész: {len(save_results)} eredmény, {fail_count} FAIL")
 
-            validation_run_obj.mark_completed()
-            logger.info(f"Validáció futás kész - pipeline_id: {pipeline_run.id}")
+                AlertService().create_alerts(validation_run_obj, save_results)
+
+                AlertService().create_missing_policy_alerts(validation_run_obj, missing_policies, environment)
+
+                if missing_policies:
+                    logger.warning(f"Hiányzó policy: {len(missing_policies)} oszlop")
+
+                self.generate_report(validation_run_obj)
+                logger.info(f"HTML riport mentve - validation_run_id: {validation_run_obj.id}")
+
+                validation_run_obj.mark_completed()
+                logger.info(f"Validáció futás kész - pipeline_id: {pipeline_run.id}")
 
         except (psycopg2.OperationalError, SQLAlchemyOperationalError) as e:
             logger.error(f"Adatbázis nem érhető el - pipeline_id: {validation_run_obj.pipeline_run.id}")
             validation_run_obj.mark_failed(err_message=str(e))
             raise
-        
+
         except Exception as e:
             logger.error(f"Validáció futás sikertelen - pipeline_id: {pipeline_run.id}", exc_info=True)
             validation_run_obj.mark_failed(str(e))
@@ -201,6 +206,8 @@ class ValidationService:
             "fail_value_overlap": fail_value_overlap,
             "fail_statistical": fail_statistical,
             "tables": tables,
+            "generated_at": timezone.now(),
+            "labels": METRIC_LABELS,
         }
 
         html = render_to_string("validations/report.html", context)

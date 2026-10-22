@@ -15,7 +15,7 @@ def prod_to_staging():
     staging_dsn = os.getenv("STAGING_DSN")
 
     if prod_dsn is None or staging_dsn is None:
-        raise ValueError("Hiányzik a PRODUCTION_DSN vagy a STAGING_DSN !")
+        raise ValueError("Hiányzik a PRODUCTION_DSN vagy a STAGING_DSN!")
 
     source = sql_database(prod_dsn, schema="public", backend="pyarrow")
 
@@ -34,7 +34,7 @@ def staging_to_dev():
     dev_dsn = os.getenv("DEV_DSN")
 
     if dev_dsn is None or staging_dsn is None:
-        raise ValueError("Hiányzik a DEV_DSN vagy a STAGING_DSN !")
+        raise ValueError("Hiányzik a DEV_DSN vagy a STAGING_DSN!")
 
     source = sql_database(staging_dsn, schema="dev_export", include_views=True, backend="sqlalchemy")
 

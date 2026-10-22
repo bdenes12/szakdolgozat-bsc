@@ -216,7 +216,10 @@ class SuggestionService:
                 skipped += 1
                 continue
 
-            if policy_suggestion.suggested_strategy is None and policy_suggestion.suggested_category.name != "TECHNICAL":
+            if (
+                policy_suggestion.suggested_strategy is None
+                and policy_suggestion.suggested_category.name != "TECHNICAL"
+            ):
                 skipped += 1
                 continue
 

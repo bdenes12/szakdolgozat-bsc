@@ -15,6 +15,7 @@ class ValidationRunAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
+
 @admin.register(ValidationResult)
 class ValidationResultAdmin(admin.ModelAdmin):
     list_display = ["table_name", "column_name", "check_type", "status", "message"]
@@ -26,4 +27,3 @@ class ValidationResultAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
-    

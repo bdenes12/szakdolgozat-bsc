@@ -95,7 +95,7 @@ class ColumnPolicyForm(forms.ModelForm):
 
         if entropy_enabled and max_entropy_rel_error is None:
             raise forms.ValidationError(
-                "Ha az entropy statisztika engedélyezve van, meg kell adni a maximális relatív hibát!"
+                "Ha az entrópia statisztika engedélyezve van, meg kell adni a maximális relatív hibát!"
             )
 
         return cleaned_data

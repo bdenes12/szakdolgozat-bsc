@@ -42,5 +42,5 @@ class AlertService:
                 schema_name=schema_name,
                 table_name=table_name,
                 column_name=column_name,
-                message=f"No {environment} policy for {schema_name}.{table_name}.{column_name}",
+                message=f"Nincs {environment} szabály: {schema_name}.{table_name}.{column_name}",
             )

@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from alerts.models import Alert
 from pipelines.models import PipelineRun
 from pipelines.services import PipelineService
+from validations.labels import METRIC_LABELS
 from validations.models import ValidationReport, ValidationResult, ValidationRun
 
 
@@ -85,6 +86,7 @@ def pipeline_detail_view(request, my_id):
         "validation_results": results,
         "alerts": alerts,
         "not_resolved_alerts": not_resolved_alerts,
+        "labels": METRIC_LABELS,
     }
 
     return render(request, "pipelines/pipeline_detail.html", context)

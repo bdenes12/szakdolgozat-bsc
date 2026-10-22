@@ -40,11 +40,11 @@ class PipelineService:
             pipeline_obj.mark_failed(err_message=str(e))
 
             return pipeline_obj
-        
+
         except Exception as e:
             logger.error(f"Pipeline futás sikertelen - pipeline_id: {pipeline_obj.id}", exc_info=True)
             pipeline_obj.mark_failed(err_message=str(e))
-            
+
             return pipeline_obj
 
     def transfer_to_staging(self, pipeline_obj):

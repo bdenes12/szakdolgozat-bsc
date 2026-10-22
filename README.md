@@ -37,7 +37,7 @@ A `migrate` a `web` konténer indulásakor lefut; a demóhoz nem kell hostos `ru
 | admin Postgres | 5438 |
 | prod | 5437 |
 | staging (Anonymizer) | 5435 |
-| dest | 5436 |
+| dev | 5436 |
 
 ## Használat
 

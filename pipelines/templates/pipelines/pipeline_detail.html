@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load custom_filter %}
 
 {% block content %}
 
@@ -14,9 +15,11 @@
     <div class="metric-card-grid">
         <section class="dashboard-runs">
             <h2>Validáció</h2>
-            <p class="dashboard-hint">{{ validation_run.status }} · {{ validation_run.started_at }} – {{ validation_run.finished_at }}</p>
+            <p class="dashboard-hint">{{ validation_run.status }} - {{ validation_run.started_at }} – {{ validation_run.finished_at }}</p>
             <p class="dashboard-actions">
+            {% if validation_run.validationreport_set.all %}
                 <a class="button button--primary" href="{% url 'pipelines:pipeline-report' pipeline.id %}">HTML riport</a>
+            {% endif %}
             </p>
         </section>
         <article class="metric-card metric-card--alert">
@@ -89,7 +92,7 @@
                         <td class="cell-metrics">
                             {% for key, value in result.metrics.items %}
                                 {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
-                                    <div><strong>{{ key }}:</strong> {{ value }}</div>
+                                    <div><strong>{{ key|translate_key:labels }}:</strong> {{ value }}</div>
                                 {% endif %}
                             {% empty %}
                                 -
@@ -97,12 +100,16 @@
                         </td>
                         <td class="cell-metrics">
                             {% for key, value in result.applied_thresholds.items %}
-                                <div><strong>{{ key }}:</strong> {{ value }}</div>
+                                <div><strong>{{ key|translate_key:labels }}:</strong> {{ value }}</div>
                             {% empty %}
                                 -
                             {% endfor %}
                         </td>
                         <td class="cell-message">{{ result.message }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="cell-empty">A validáció sikertelen volt, eredmény nem került mentésre.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
