@@ -1,4 +1,4 @@
-{% load custom_filter %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -62,7 +62,7 @@
                                 <td class="cell-metrics">
                                     {% for key, value in result.metrics.items %}
                                         {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
-                                            <div><strong>{{ key|translate_key:labels }}:</strong> {{ value }}</div>
+                                            <div><strong>{{ key|translate_key:labels }}:</strong> {{ value|round_value }}</div>
                                         {% endif %}
                                     {% empty %}
                                         -
@@ -70,7 +70,7 @@
                                 </td>
                                 <td class="cell-metrics">
                                     {% for key, value in result.applied_thresholds.items %}
-                                        <div><strong>{{ key|translate_key:labels }}:</strong> {{ value }}</div>
+                                        <div><strong>{{ key|translate_key:labels }}:</strong> {{ value|round_value }}</div>
                                     {% empty %}
                                         -
                                     {% endfor %}

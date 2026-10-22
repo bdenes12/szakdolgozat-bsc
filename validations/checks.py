@@ -265,7 +265,7 @@ class ValueOverlapCheck(BaseCheck):
                     "applied_thresholds": {"maximum_overlap": threshold},
                     "message": "Az átfedés a megengedett határon belül"
                     if metrics["overlap_ratio"] <= threshold
-                    else f"Az átfedés {metrics['overlap_ratio']}% (megengedett: {threshold})%",
+                    else f"Az átfedés {metrics['overlap_ratio']}% (megengedett: {threshold}%)",
                     "column_policy": policy,
                 }
             )
@@ -372,11 +372,11 @@ class StatisticalQualityCheck(BaseCheck):
             prod_mean = None
             dev_mean = None
         else:
-            prod_mean = round(float(np.mean(np_prod_values)), 3)
-            dev_mean = round(float(np.mean(np_dev_values)), 3)
+            prod_mean = float(np.mean(np_prod_values))
+            dev_mean = float(np.mean(np_dev_values))
 
             if prod_mean != 0:
-                mean_rel_error = float(round(abs(dev_mean - prod_mean) / abs(prod_mean), 3))
+                mean_rel_error = float(abs(dev_mean - prod_mean) / abs(prod_mean))
             else:
                 mean_rel_error = None
 
@@ -391,10 +391,10 @@ class StatisticalQualityCheck(BaseCheck):
             prod_std = None
             dev_std = None
         else:
-            prod_std = round(float(np.std(np_prod_values, ddof=0)), 3)
-            dev_std = round(float(np.std(np_dev_values, ddof=0)), 3)
+            prod_std = float(np.std(np_prod_values, ddof=0))
+            dev_std = float(np.std(np_dev_values, ddof=0))
             if prod_std != 0:
-                std_rel_error = float(round(abs(dev_std - prod_std) / abs(prod_std), 3))
+                std_rel_error = float(abs(dev_std - prod_std) / abs(prod_std))
             else:
                 std_rel_error = None
 
@@ -407,8 +407,8 @@ class StatisticalQualityCheck(BaseCheck):
 
         else:
             result = ks_2samp(prod_values, dev_values)
-            ks_statistic = round(float(result.statistic), 3)
-            ks_pvalue = round(float(result.pvalue), 3)
+            ks_statistic = float(result.statistic)
+            ks_pvalue = float(result.pvalue)
 
         return {"ks_statistic": ks_statistic, "ks_pvalue": ks_pvalue}
 
@@ -426,7 +426,7 @@ class StatisticalQualityCheck(BaseCheck):
 
         p_non_zero = p[p > 0]
 
-        entropy = round(-np.sum(p_non_zero * np.log2(p_non_zero)), 3)
+        entropy = -np.sum(p_non_zero * np.log2(p_non_zero))
 
         return float(entropy)
 
@@ -474,7 +474,7 @@ class StatisticalQualityCheck(BaseCheck):
                     if mean_rel_error is not None:
                         metrics.update(mean)
                         if mean_rel_error > max_mean_rel_error:
-                            failed.append(f"Átlag relatív eltérése {mean_rel_error} (max. {max_mean_rel_error})")
+                            failed.append(f"Átlag relatív eltérése {mean_rel_error:.3g} (max. {max_mean_rel_error})")
 
             if std_enabled:
                 max_std_rel_error = spec["std"].get("max_rel_error") or 0.25
@@ -486,7 +486,7 @@ class StatisticalQualityCheck(BaseCheck):
                     if std_rel_error is not None:
                         metrics.update(std)
                         if std_rel_error > max_std_rel_error:
-                            failed.append(f"Szórás relatív eltérése {std_rel_error} (max. {max_std_rel_error})")
+                            failed.append(f"Szórás relatív eltérése {std_rel_error:.3g} (max. {max_std_rel_error})")
 
             if ks_enabled:
                 max_statistic = spec["ks"].get("max_statistic") or 0.20
@@ -503,9 +503,9 @@ class StatisticalQualityCheck(BaseCheck):
                     if ks_statistic is not None:
                         metrics.update(distributions)
                         if ks_statistic > max_statistic:
-                            failed.append(f"KS-távolság {ks_statistic} (max. {max_statistic})")
+                            failed.append(f"KS-távolság {ks_statistic:.3g} (max. {max_statistic})")
                         if ks_pvalue < min_pvalue:
-                            failed.append(f"KS p-érték {ks_pvalue} (min. {min_pvalue})")
+                            failed.append(f"KS p-érték {ks_pvalue:.3g} (min. {min_pvalue})")
 
             if entropy_enabled:
                 prod_counts = self._value_counts(self.prod_dsn, schema, table, column)
@@ -521,11 +521,11 @@ class StatisticalQualityCheck(BaseCheck):
                 metrics["dev_entropy"] = dev_entropy
 
                 if prod_entropy != 0:
-                    entropy_rel_error = round(abs(dev_entropy - prod_entropy) / abs(prod_entropy), 3)
+                    entropy_rel_error = abs(dev_entropy - prod_entropy) / abs(prod_entropy)
                     metrics["entropy_rel_error"] = entropy_rel_error
 
                     if entropy_rel_error > max_entropy_rel_error:
-                        failed.append(f"Entrópia relatív eltérése {entropy_rel_error} (max. {max_entropy_rel_error})")
+                        failed.append(f"Entrópia relatív eltérése {entropy_rel_error:.3g} (max. {max_entropy_rel_error})")
 
             if (
                 "mean_rel_error" not in metrics
