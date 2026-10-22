@@ -1,13 +1,15 @@
 import pytest
 from django.contrib.auth.models import User
 from django.urls import reverse
-from django.test import Client
+
+from alerts.models import Alert
 from pipelines.models import PipelineRun
 from validations.models import ValidationRun
-from alerts.models import Alert
+
 
 def _create_user():
     return User.objects.create_superuser(username="admin", email="admin@test.com", password="admin123")
+
 
 @pytest.mark.django_db
 def _validation_run():
@@ -15,9 +17,18 @@ def _validation_run():
 
     return ValidationRun.objects.create(pipeline_run=pipeline, status=ValidationRun.ValidationRunStatuses.COMPLETED)
 
+
 @pytest.mark.django_db
 def _alert(vr, column_name):
-    return Alert.objects.create(validation_run=vr, alert_type=Alert.AlertType.VALUE_OVERLAP, severity=Alert.SeverityType.CRITICAL, schema_name="public", table_name="invoices", column_name=column_name, message="overlap")
+    return Alert.objects.create(
+        validation_run=vr,
+        alert_type=Alert.AlertType.VALUE_OVERLAP,
+        severity=Alert.SeverityType.CRITICAL,
+        schema_name="public",
+        table_name="invoices",
+        column_name=column_name,
+        message="overlap",
+    )
 
 
 @pytest.mark.django_db
@@ -26,6 +37,7 @@ def test_alert_list_redirects_when_anonymous(client):
 
     assert response.status_code == 302
     assert "/admin/login/" in response.url
+
 
 @pytest.mark.django_db
 def test_alert_list_ok_when_logged_in(client):
@@ -39,7 +51,7 @@ def test_alert_list_ok_when_logged_in(client):
     assert response.status_code == 200
     assert response.context["alert_list"].count() == 1
     assert "alert_list" in response.context
-    
+
 
 @pytest.mark.django_db
 def test_alert_resolve_post_marks_resolved(client):
@@ -49,14 +61,15 @@ def test_alert_resolve_post_marks_resolved(client):
     admin_user = _create_user()
     client.force_login(admin_user)
 
-    response = client.post(reverse('alerts:alert-resolve', args=[alert.id]))
+    response = client.post(reverse("alerts:alert-resolve", args=[alert.id]))
 
     alert.refresh_from_db()
 
     assert alert.is_resolved == True
     assert alert.resolved_at is not None
     assert response.status_code == 302
-    assert response.url == reverse('alerts:alert-list')
+    assert response.url == reverse("alerts:alert-list")
+
 
 @pytest.mark.django_db
 def test_alert_resolve_get_does_not_resolve(client):
@@ -66,7 +79,7 @@ def test_alert_resolve_get_does_not_resolve(client):
     admin_user = _create_user()
     client.force_login(admin_user)
 
-    response = client.get(reverse('alerts:alert-resolve', args=[alert.id]))
+    response = client.get(reverse("alerts:alert-resolve", args=[alert.id]))
 
     alert.refresh_from_db()
 

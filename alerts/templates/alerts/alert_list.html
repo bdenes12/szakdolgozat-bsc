@@ -2,40 +2,47 @@
 
 {% block content %}
 
-<table class="runs-table">
-    <thead>
-        <tr>
-            <th>Típus</th>
-            <th>Severity</th>
-            <th>Séma</th>
-            <th>Tábla</th>
-            <th>Oszlop</th>
-            <th>Üzenet</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for alert in alert_list %}
-        <tr>
-            <td>{{ alert.alert_type }}</td>
-            <td>{{ alert.severity }}</td>
-            <td>{{ alert.schema_name }}</td>
-            <td>{{ alert.table_name }}</td>
-            <td>{{ alert.column_name }}</td>
-            <td>{{ alert.message }}</td>
-            <td>
-                <form action="{% url 'alerts:alert-resolve' alert.id %}" method="POST">{% csrf_token %}
-                    <button name="resolve_alert" value="resolve_alert">RESOLVE</button>
-                </form>
-            </td>
-            <td>
-                <a href="{% url 'pipelines:pipeline-detail' alert.validation_run.pipeline_run_id %}">Pipeline ID: {{ alert.validation_run.pipeline_run_id }}</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="6" class="dashboard-empty">Nincs riasztás.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<section class="dashboard-runs">
+    <h2>Nyitott riasztások</h2>
+    <div class="table-scroll">
+        <table class="runs-table">
+            <thead>
+                <tr>
+                    <th>Típus</th>
+                    <th>Severity</th>
+                    <th>Séma</th>
+                    <th>Tábla</th>
+                    <th>Oszlop</th>
+                    <th>Üzenet</th>
+                    <th>Művelet</th>
+                    <th>Futás</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alert_list %}
+                <tr>
+                    <td class="cell-nowrap">{{ alert.alert_type }}</td>
+                    <td class="cell-nowrap">{{ alert.severity }}</td>
+                    <td>{{ alert.schema_name }}</td>
+                    <td>{{ alert.table_name }}</td>
+                    <td>{{ alert.column_name }}</td>
+                    <td class="cell-message">{{ alert.message }}</td>
+                    <td class="cell-nowrap">
+                        <form action="{% url 'alerts:alert-resolve' alert.id %}" method="POST">{% csrf_token %}
+                            <button class="button button--primary" name="resolve_alert" value="resolve_alert">RESOLVE</button>
+                        </form>
+                    </td>
+                    <td class="cell-nowrap">
+                        <a href="{% url 'pipelines:pipeline-detail' alert.validation_run.pipeline_run_id %}">Pipeline {{ alert.validation_run.pipeline_run_id }}</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="dashboard-empty">Nincs riasztás.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('policies', '0004_alter_maskingstrategy_anon_function'),
+        ("policies", "0004_alter_maskingstrategy_anon_function"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='anonfunction',
-            name='function',
-            field=models.CharField(default='', max_length=250),
+            model_name="anonfunction",
+            name="function",
+            field=models.CharField(default="", max_length=250),
         ),
     ]

@@ -15,7 +15,9 @@
         <section class="dashboard-runs">
             <h2>Validáció</h2>
             <p class="dashboard-hint">{{ validation_run.status }} · {{ validation_run.started_at }} – {{ validation_run.finished_at }}</p>
-            <a class="button button--primary" href="{% url 'pipelines:pipeline-report' pipeline.id %}">HTML riport</a>
+            <p class="dashboard-actions">
+                <a class="button button--primary" href="{% url 'pipelines:pipeline-report' pipeline.id %}">HTML riport</a>
+            </p>
         </section>
         <article class="metric-card metric-card--alert">
             <h3>Nyitott riasztások</h3>
@@ -26,82 +28,86 @@
 
     <section class="dashboard-runs">
         <h2>CRITICAL / WARNING alertek</h2>
-        <table class="runs-table">
-            <thead>
-                <tr>
-                    <th>Típus</th>
-                    <th>Severity</th>
-                    <th>Séma</th>
-                    <th>Tábla</th>
-                    <th>Oszlop</th>
-                    <th>Üzenet</th>
-                    <th>Megoldva</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for alert in alerts %}
-                <tr>
-                    <td>{{ alert.alert_type }}</td>
-                    <td>{{ alert.severity }}</td>
-                    <td>{{ alert.schema_name }}</td>
-                    <td>{{ alert.table_name }}</td>
-                    <td>{{ alert.column_name }}</td>
-                    <td>{{ alert.message }}</td>
-                    <td>{{ alert.is_resolved }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="dashboard-empty">Nincs CRITICAL/WARNING alert.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-scroll">
+            <table class="runs-table">
+                <thead>
+                    <tr>
+                        <th>Típus</th>
+                        <th>Severity</th>
+                        <th>Séma</th>
+                        <th>Tábla</th>
+                        <th>Oszlop</th>
+                        <th>Üzenet</th>
+                        <th>Megoldva</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr>
+                        <td class="cell-nowrap">{{ alert.alert_type }}</td>
+                        <td class="cell-nowrap">{{ alert.severity }}</td>
+                        <td>{{ alert.schema_name }}</td>
+                        <td>{{ alert.table_name }}</td>
+                        <td>{{ alert.column_name }}</td>
+                        <td class="cell-message">{{ alert.message }}</td>
+                        <td class="cell-nowrap">{{ alert.is_resolved|yesno:"Igen,Nem" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="dashboard-empty">Nincs CRITICAL/WARNING alert.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <section class="dashboard-runs">
         <h2>Validációs eredmények</h2>
-        <table class="runs-table">
-            <thead>
-                <tr>
-                    <th>Séma név</th>
-                    <th>Tábla név</th>
-                    <th>Oszlop név</th>
-                    <th>Ellenőrzés típusa</th>
-                    <th>Státusz</th>
-                    <th>Metrikák</th>
-                    <th>Küszöbértékek</th>
-                    <th>Üzenet</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in validation_results %}
-                <tr>
-                    <td>{{ result.schema_name }}</td>
-                    <td>{{ result.table_name }}</td>
-                    <td>{{ result.column_name }}</td>
-                    <td>{{ result.check_type }}</td>
-                    <td>{{ result.status }}</td>
-                    <td>
-                        {% for key, value in result.metrics.items %}
-                            {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
+        <div class="table-scroll">
+            <table class="runs-table runs-table--fixed">
+                <thead>
+                    <tr>
+                        <th class="col-schema">Séma</th>
+                        <th class="col-table">Tábla</th>
+                        <th class="col-column">Oszlop</th>
+                        <th class="col-check">Ellenőrzés</th>
+                        <th class="col-status">Státusz</th>
+                        <th class="col-metrics">Metrikák</th>
+                        <th class="col-thresholds">Küszöbértékek</th>
+                        <th class="col-message">Üzenet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in validation_results %}
+                    <tr>
+                        <td>{{ result.schema_name }}</td>
+                        <td>{{ result.table_name }}</td>
+                        <td>{{ result.column_name }}</td>
+                        <td class="cell-nowrap">{{ result.check_type }}</td>
+                        <td class="cell-nowrap">{{ result.status }}</td>
+                        <td class="cell-metrics">
+                            {% for key, value in result.metrics.items %}
+                                {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
+                                    <div><strong>{{ key }}:</strong> {{ value }}</div>
+                                {% endif %}
+                            {% empty %}
+                                -
+                            {% endfor %}
+                        </td>
+                        <td class="cell-metrics">
+                            {% for key, value in result.applied_thresholds.items %}
                                 <div><strong>{{ key }}:</strong> {{ value }}</div>
-                            {% endif %}
-                        {% empty %}
-                            -
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for key, value in result.applied_thresholds.items %}
-                            <div><strong>{{ key }}:</strong> {{ value }}</div>
-                        {% empty %}
-                            -
-                        {% endfor %}
-                    </td>
-                    <td>{{ result.message }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                            {% empty %}
+                                -
+                            {% endfor %}
+                        </td>
+                        <td class="cell-message">{{ result.message }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 {% else %}
     <p class="dashboard-empty">Ehhez a futáshoz még nincs validáció.</p>

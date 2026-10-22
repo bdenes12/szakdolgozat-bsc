@@ -4,22 +4,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('policies', '0010_alter_columnpolicy_masking_strategy'),
+        ("policies", "0010_alter_columnpolicy_masking_strategy"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='columnpolicy',
-            options={'verbose_name_plural': 'Column policies'},
+            name="columnpolicy",
+            options={"verbose_name_plural": "Column policies"},
         ),
         migrations.AlterModelOptions(
-            name='datacategory',
-            options={'verbose_name_plural': 'Data categories'},
+            name="datacategory",
+            options={"verbose_name_plural": "Data categories"},
         ),
         migrations.AlterModelOptions(
-            name='maskingstrategy',
-            options={'verbose_name_plural': 'Masking strategies'},
+            name="maskingstrategy",
+            options={"verbose_name_plural": "Masking strategies"},
         ),
     ]

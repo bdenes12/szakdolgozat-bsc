@@ -1,16 +1,18 @@
 from django.db import models
 
+
 class DataCategory(models.Model):
     name = models.CharField(max_length=250, unique=True)
     description = models.TextField(blank=True)
     maximum_overlap = models.DecimalField(max_digits=5, decimal_places=2)
     is_active = models.BooleanField(default=True)
-    
+
     class Meta:
         verbose_name_plural = "Data categories"
-    
+
     def __str__(self):
         return f"{self.name} - {self.description}"
+
 
 class AnonFunction(models.Model):
     name = models.CharField(max_length=250, unique=True)
@@ -20,6 +22,7 @@ class AnonFunction(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.description}"
+
 
 class MaskingStrategy(models.Model):
     name = models.CharField(max_length=250, unique=True)
@@ -33,6 +36,7 @@ class MaskingStrategy(models.Model):
     def __str__(self):
         return f"{self.name} - {self.description}"
 
+
 class ColumnPolicy(models.Model):
     schema_name = models.CharField(max_length=250)
     table_name = models.CharField(max_length=250)
@@ -42,7 +46,9 @@ class ColumnPolicy(models.Model):
         STAGING = "STAGING", "Staging"
         DEVELOPMENT = "DEVELOPMENT", "Development"
 
-    target_environment = models.CharField(max_length=250, choices=EnvironmentTypes.choices, default=EnvironmentTypes.STAGING)
+    target_environment = models.CharField(
+        max_length=250, choices=EnvironmentTypes.choices, default=EnvironmentTypes.STAGING
+    )
 
     class UserTypes(models.TextChoices):
         SUPPORT = "SUPPORT", "Support"
@@ -57,11 +63,15 @@ class ColumnPolicy(models.Model):
     class Meta:
         verbose_name_plural = "Column policies"
         constraints = [
-                models.UniqueConstraint(fields=["schema_name", "table_name", "column_name", "target_environment", "masking_policy"], name="unique_policy")
-            ]
+            models.UniqueConstraint(
+                fields=["schema_name", "table_name", "column_name", "target_environment", "masking_policy"],
+                name="unique_policy",
+            )
+        ]
 
     def __str__(self):
         return f"{self.schema_name}.{self.table_name}.{self.column_name} [{self.target_environment}]"
+
 
 class PolicySuggestion(models.Model):
     schema_name = models.CharField(max_length=250)
@@ -84,8 +94,10 @@ class PolicySuggestion(models.Model):
 
     class Meta:
         constraints = [
-                models.UniqueConstraint(fields=["schema_name", "table_name", "column_name"], name="unique_policy_suggestion")
-            ]
+            models.UniqueConstraint(
+                fields=["schema_name", "table_name", "column_name"], name="unique_policy_suggestion"
+            )
+        ]
 
     def __str__(self):
         return f"{self.schema_name}.{self.table_name}.{self.column_name} [{self.status}]"

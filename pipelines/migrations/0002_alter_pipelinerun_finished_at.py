@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('pipelines', '0001_initial'),
+        ("pipelines", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='pipelinerun',
-            name='finished_at',
+            model_name="pipelinerun",
+            name="finished_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

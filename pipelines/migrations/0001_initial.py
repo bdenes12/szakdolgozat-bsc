@@ -4,21 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='PipelineRun',
+            name="PipelineRun",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('RUNNING', 'Running'), ('COMPLETED', 'Completed'), ('FAILED', 'Failed')], max_length=250)),
-                ('started_at', models.DateTimeField(auto_now_add=True)),
-                ('finished_at', models.DateField(blank=True, null=True)),
-                ('error_message', models.TextField(blank=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("RUNNING", "Running"), ("COMPLETED", "Completed"), ("FAILED", "Failed")],
+                        max_length=250,
+                    ),
+                ),
+                ("started_at", models.DateTimeField(auto_now_add=True)),
+                ("finished_at", models.DateField(blank=True, null=True)),
+                ("error_message", models.TextField(blank=True)),
             ],
         ),
     ]

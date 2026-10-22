@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('validations', '0001_initial'),
+        ("validations", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='validationrun',
-            name='finished_at',
+            model_name="validationrun",
+            name="finished_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

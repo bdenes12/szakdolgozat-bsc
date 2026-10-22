@@ -40,24 +40,25 @@
         {% for table in tables %}
             <section class="dashboard-runs">
                 <h2>{{ table.schema_name }}.{{ table.table_name }} — Kockázat: {{ table.risk }}</h2>
-                <table class="runs-table">
+                <div class="table-scroll">
+                <table class="runs-table runs-table--fixed">
                     <thead>
                         <tr>
-                            <th>Oszlop név</th>
-                            <th>Ellenőrzés típusa</th>
-                            <th>Státusz</th>
-                            <th>Metrikák</th>
-                            <th>Küszöbértékek</th>
-                            <th>Üzenet</th>
+                            <th class="col-column">Oszlop</th>
+                            <th class="col-check">Ellenőrzés</th>
+                            <th class="col-status">Státusz</th>
+                            <th class="col-metrics">Metrikák</th>
+                            <th class="col-thresholds">Küszöbértékek</th>
+                            <th class="col-message">Üzenet</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for result in table.results %}
                             <tr>
                                 <td>{{ result.column_name }}</td>
-                                <td>{{ result.check_type }}</td>
-                                <td>{{ result.status }}</td>
-                                <td>
+                                <td class="cell-nowrap">{{ result.check_type }}</td>
+                                <td class="cell-nowrap">{{ result.status }}</td>
+                                <td class="cell-metrics">
                                     {% for key, value in result.metrics.items %}
                                         {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
                                             <div><strong>{{ key }}:</strong> {{ value }}</div>
@@ -66,18 +67,19 @@
                                         -
                                     {% endfor %}
                                 </td>
-                                <td>
+                                <td class="cell-metrics">
                                     {% for key, value in result.applied_thresholds.items %}
                                         <div><strong>{{ key }}:</strong> {{ value }}</div>
                                     {% empty %}
                                         -
                                     {% endfor %}
                                 </td>
-                                <td>{{ result.message }}</td>
+                                <td class="cell-message">{{ result.message }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
                 
                 {% for result in table.results %}
                     {% if result.metrics.prod_histogram %}
@@ -88,6 +90,7 @@
                     {% endif %}
                 {% endfor %}
 
+                <div class="table-scroll">
                 <table class="runs-table">
                     <thead>
                         <tr>
@@ -100,10 +103,10 @@
                     <tbody>
                         {% for alert in table.alerts %}
                             <tr>
-                                <td>{{ alert.alert_type }}</td>
-                                <td>{{ alert.severity }}</td>
+                                <td class="cell-nowrap">{{ alert.alert_type }}</td>
+                                <td class="cell-nowrap">{{ alert.severity }}</td>
                                 <td>{{ alert.column_name }}</td>
-                                <td>{{ alert.message }}</td>
+                                <td class="cell-message">{{ alert.message }}</td>
                             </tr>
                         {% empty %}
                             <tr>
@@ -112,6 +115,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </section>
         {% endfor %}
 

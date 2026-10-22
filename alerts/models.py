@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils import timezone
-from validations.models import ValidationRun, ValidationResult
+
+from validations.models import ValidationResult, ValidationRun
+
 
 class Alert(models.Model):
-
     validation_run = models.ForeignKey(ValidationRun, on_delete=models.PROTECT)
     validation_result = models.ForeignKey(ValidationResult, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -21,7 +22,7 @@ class Alert(models.Model):
         WARNING = "WARNING", "Warning"
         CRITICAL = "CRITICAL", "Critical"
 
-    severity = models.CharField(max_length=250, choices=SeverityType.choices, default=SeverityType.INFO)  
+    severity = models.CharField(max_length=250, choices=SeverityType.choices, default=SeverityType.INFO)
     schema_name = models.CharField(max_length=250)
     table_name = models.CharField(max_length=250)
     column_name = models.CharField(max_length=250)
@@ -31,6 +32,6 @@ class Alert(models.Model):
     resolved_at = models.DateTimeField(null=True, blank=True)
 
     def resolve(self):
-        self.is_resolved=True
-        self.resolved_at=timezone.now()
+        self.is_resolved = True
+        self.resolved_at = timezone.now()
         self.save()

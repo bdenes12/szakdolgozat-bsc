@@ -301,13 +301,13 @@ ANON_FUNCTIONS = {
         "anon_function": "anon.dnoise",
         "argumentum_data_types": "noise_value anyelement, noise_range interval",
         "is_column_name_parameter": True,
-        "description": "Dátumzaj; a parameters egy intervallum, pl. [\"365 days\"].",
+        "description": 'Dátumzaj; a parameters egy intervallum, pl. ["365 days"].',
     },
     "partial": {
         "anon_function": "anon.partial",
         "argumentum_data_types": "ov text, prefix integer, padding text, suffix integer",
         "is_column_name_parameter": True,
-        "description": "Részleges maszk; parameters pl. [2, \"****\", 2].",
+        "description": 'Részleges maszk; parameters pl. [2, "****", 2].',
     },
     "partial_email": {
         "anon_function": "anon.partial_email",
@@ -319,7 +319,7 @@ ANON_FUNCTIONS = {
         "anon_function": "anon.digest",
         "argumentum_data_types": "val text, salt text, algorithm text",
         "is_column_name_parameter": True,
-        "description": "Digest; parameters pl. [\"mysalt\", \"sha256\"].",
+        "description": 'Digest; parameters pl. ["mysalt", "sha256"].',
     },
     "hash": {
         "anon_function": "anon.hash",

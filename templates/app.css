@@ -1,15 +1,17 @@
 :root {
-    --color-pass: rgb(46, 160, 67);
-    --color-warning: rgb(210, 153, 34);
-    --color-fail: rgb(207, 34, 46);
-    --color-alert: rgb(56, 113, 224);
-    --nav-bg: #1f2937;
-    --page-bg: #f3f4f6;
+    /* Django Admin standard színek */
+    --color-pass: #28a745;
+    --color-warning: #ffc107;
+    --color-fail: #ba2121; /* Django admin hiba piros */
+    --color-alert: #79aec8; /* Django másodlagos kék */
+    
+    --nav-bg: #417690; /* Django admin fejléc kék */
+    --page-bg: #f8f8f8;
     --card-bg: #ffffff;
-    --text: #111827;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --radius: 10px;
+    --text: #333333;
+    --muted: #666666;
+    --border: #cccccc; /* Szigorúbb, sötétebb szürke szegélyek */
+    --radius: 4px; /* A Django admin kevésbé kerekített */
 }
 
 *,
@@ -22,7 +24,7 @@ body {
     margin: 0;
     background: var(--page-bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: Roboto, "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif;
     line-height: 1.45;
 }
 
@@ -35,7 +37,7 @@ body {
 .main-navbar {
     background-color: var(--nav-bg);
     padding: 0.8rem 1.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: none; /* A Django admin fejléc általában lapos */
     margin-bottom: 1.5rem;
 }
 
@@ -48,9 +50,9 @@ body {
 }
 
 .nav-logo {
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 1.2rem;
+    color: #f5dd5d; /* Django admin fejléc sárgás szöveg kontraszt */
+    font-weight: 300; /* Django-s vékonyabb font a logónál */
+    font-size: 1.5rem;
 }
 
 .nav-links {
@@ -62,53 +64,56 @@ body {
 }
 
 .nav-links a {
-    color: #9ca3af;
+    color: #ffffff;
     text-decoration: none;
     font-weight: 500;
-    font-size: 1rem;
+    font-size: 0.875rem;
+    text-transform: uppercase; /* Django admin felső menü stílus */
     padding: 0.5rem 0.8rem;
-    border-radius: 6px;
+    border-radius: var(--radius);
 }
 
 .nav-links a:hover {
     color: #ffffff;
-    background-color: #374151;
+    background-color: #79aec8; /* Hover kék */
 }
 
 .nav-links .admin-link {
-    border: 1px solid #4b5563;
+    border: 1px solid #79aec8;
 }
 
 .nav-links .admin-link:hover {
-    background-color: #4b5563;
+    background-color: #79aec8;
 }
 
 .button {
     display: inline-block;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius);
     padding: 0.65rem 1.15rem;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    font-weight: 500;
     cursor: pointer;
     font-family: inherit;
+    transition: background 0.15s;
 }
 
 .button--primary {
-    background: var(--nav-bg);
+    background: #417690;
     color: #ffffff;
 }
 
 .button--primary:hover {
-    background: #374151;
+    background: #205067;
 }
 
 .button:disabled {
-    background: #6c757d !important; /* Átvált szürkére */
-    color: #e9ecef !important;      /* Világosszürke szöveg */
-    cursor: not-allowed !important; /* Megjelenik a tiltó jel kurzor 🚫 */
-    opacity: 0.65;                  /* Elhalványul a gomb */
-    box-shadow: none;               /* Eltünteti az esetleges árnyékokat */
+    background: #6c757d !important;
+    color: #e9ecef !important;
+    cursor: not-allowed !important;
+    opacity: 0.65;
+    box-shadow: none;
 }
 
 .dashboard-hint {
@@ -117,24 +122,35 @@ body {
     font-size: 0.95rem;
 }
 
-.dashboard-hint a {
-    color: #2563eb;
+.dashboard-hint a,
+.help-section a,
+.runs-table a {
+    color: #447e9b; /* Django alapértelmezett link szín */
     font-weight: 600;
     text-decoration: none;
 }
 
-.dashboard-hint a:hover {
+.dashboard-hint a:hover,
+.help-section a:hover,
+.runs-table a:hover {
+    color: #036; /* Django hover link szín */
     text-decoration: underline;
 }
 
 .dashboard-actions {
     margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .dashboard-metrics h2,
-.dashboard-runs h2 {
+.dashboard-runs h2,
+.help-section h2 {
     margin: 0 0 1rem;
-    font-size: 1.2rem;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--muted);
 }
 
 .metric-card-grid {
@@ -144,13 +160,17 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.metric-card-grid > .dashboard-runs,
+.metric-card-grid > .metric-card {
+    margin-bottom: 0;
+}
+
 .metric-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 1rem 1.1rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    border-top: 4px solid var(--muted);
+    border-top: 4px solid #79aec8; /* Django modul fejlécszín */
 }
 
 .metric-card h3 {
@@ -175,22 +195,13 @@ body {
     color: var(--muted);
 }
 
-.metric-card--pass {
-    border-top-color: var(--color-pass);
-}
+.metric-card--pass { border-top-color: var(--color-pass); }
+.metric-card--warning { border-top-color: var(--color-warning); }
+.metric-card--fail { border-top-color: var(--color-fail); }
+.metric-card--alert { border-top-color: var(--color-alert); }
 
-.metric-card--warning {
-    border-top-color: var(--color-warning);
-}
-
-.metric-card--fail {
-    border-top-color: var(--color-fail);
-}
-
-.metric-card--alert {
-    border-top-color: var(--color-alert);
-    max-width: 280px;
-    margin-bottom: 1rem;
+.metric-card .button {
+    margin-top: 0.75rem;
 }
 
 .chart-grid {
@@ -218,56 +229,142 @@ body {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1rem 1.1rem 1.2rem;
+    padding: 0; /* A Django táblázatoknál nincs belső padding a kártyán */
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.dashboard-runs h1 {
+    margin: 0;
+    padding: 10px 15px;
+    font-size: 1rem;
+    background: #eef1f3;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.dashboard-runs h2 {
+    margin: 0;
+    padding: 8px 15px;
+    font-size: 0.875rem;
+    background: #eef1f3;
+    border-bottom: 1px solid var(--border);
+}
+
+.dashboard-runs > .dashboard-hint,
+.dashboard-runs > .dashboard-actions {
+    margin: 0;
+    padding: 10px 15px;
+}
+
+.table-scroll {
+    width: 100%;
+    overflow-x: auto;
 }
 
 .runs-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.95rem;
+    font-size: 0.875rem; /* Django táblázat méret */
 }
 
 .runs-table th,
 .runs-table td {
     text-align: left;
-    padding: 0.65rem 0.5rem;
-    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
     vertical-align: top;
+    overflow-wrap: break-word;
 }
 
 .runs-table th {
-    color: var(--muted);
-    font-size: 0.8rem;
+    color: #666;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    background: #f8f8f8;
+    white-space: nowrap;
+}
+
+.runs-table tbody tr:nth-child(odd) {
+    background: #f9f9f9; /* Django "zebra" sávozás */
+}
+
+.runs-table tbody tr:nth-child(even) {
+    background: #ffffff;
 }
 
 .runs-table tbody tr:hover {
-    background: #f9fafb;
+    background: #f5f5f5; /* Django hover effekt a sorokon */
 }
 
-.runs-table a {
-    color: #2563eb;
-    font-weight: 600;
-    text-decoration: none;
+.runs-table--fixed {
+    table-layout: fixed;
 }
 
-.runs-table a:hover {
-    text-decoration: underline;
+.runs-table--fixed td {
+    overflow-wrap: anywhere;
+}
+
+.runs-table--fixed .col-schema { width: 6%; }
+.runs-table--fixed .col-table { width: 10%; }
+.runs-table--fixed .col-column { width: 10%; }
+.runs-table--fixed .col-check { width: 14%; }
+.runs-table--fixed .col-status { width: 7%; }
+.runs-table--fixed .col-metrics { width: 20%; }
+.runs-table--fixed .col-thresholds { width: 15%; }
+.runs-table--fixed .col-message { width: 18%; }
+
+.runs-table .cell-nowrap {
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+
+.runs-table .cell-metrics {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.runs-table .cell-metrics div + div {
+    margin-top: 2px;
+}
+
+.runs-table .cell-message {
+    min-width: 160px;
+    overflow-wrap: anywhere;
+}
+
+.runs-table td.dashboard-empty {
+    border: none;
+    border-radius: 0;
+}
+
+.runs-table form {
+    margin: 0;
+}
+
+.runs-table .button {
+    margin-top: 0;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
 }
 
 .dashboard-empty {
     background: var(--card-bg);
-    border: 1px dashed var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 1.25rem;
     color: var(--muted);
 }
 
+.help-section {
+    margin-bottom: 1.75rem;
+}
+
 @media (max-width: 900px) {
-    .metric-card-grid,
     .chart-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
     }
 }
 
@@ -276,54 +373,4 @@ body {
     .chart-grid {
         grid-template-columns: 1fr;
     }
-}
-
-.help-section {
-    margin-bottom: 1.75rem;
-}
-
-.help-section h2 {
-    font-size: 1.2rem;
-    margin: 0 0 0.5rem;
-}
-
-.help-section a {
-    color: #2563eb;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.help-section a:hover {
-    text-decoration: underline;
-}
-
-.runs-table .cell-metrics {
-    font-size: 0.85rem;
-    word-break: break-word;
-    max-width: 220px;
-}
-
-.dashboard-runs {
-    margin-bottom: 1.5rem;
-}
-
-.dashboard-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.metric-card-grid .metric-card--alert {
-    max-width: none;
-    margin-bottom: 1.5rem;
-}
-
-.dashboard-runs h1 {
-    margin: 0 0 0.35rem;
-    font-size: 1.5rem;
-}
-
-.dashboard-runs h2 {
-    margin: 0 0 0.75rem;
-    font-size: 1.15rem;
 }

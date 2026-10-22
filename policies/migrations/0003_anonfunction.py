@@ -4,19 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('policies', '0002_alter_maskingstrategy_parameters'),
+        ("policies", "0002_alter_maskingstrategy_parameters"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AnonFunction',
+            name="AnonFunction",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=250, unique=True)),
-                ('is_column_name_parameter', models.BooleanField(default=True)),
-                ('description', models.TextField(blank=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=250, unique=True)),
+                ("is_column_name_parameter", models.BooleanField(default=True)),
+                ("description", models.TextField(blank=True)),
             ],
         ),
     ]

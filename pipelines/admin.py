@@ -1,5 +1,7 @@
 from django.contrib import admin
+
 from .models import PipelineRun
+
 
 @admin.register(PipelineRun)
 class PipelineRunAdmin(admin.ModelAdmin):
@@ -7,7 +9,7 @@ class PipelineRunAdmin(admin.ModelAdmin):
     list_filter = ["status", "started_at", "finished_at"]
 
     def has_add_permission(self, request, obj=None):
-            return False
+        return False
 
     def has_change_permission(self, request, obj=None):
         return False

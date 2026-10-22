@@ -5,40 +5,72 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('pipelines', '0001_initial'),
-        ('policies', '0001_initial'),
+        ("pipelines", "0001_initial"),
+        ("policies", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ValidationRun',
+            name="ValidationRun",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('RUNNING', 'Running'), ('COMPLETED', 'Completed'), ('FAILED', 'Failed')], max_length=250)),
-                ('started_at', models.DateTimeField(auto_now_add=True)),
-                ('finished_at', models.DateField(blank=True, null=True)),
-                ('error_message', models.TextField(blank=True)),
-                ('pipeline_run', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='pipelines.pipelinerun')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("RUNNING", "Running"), ("COMPLETED", "Completed"), ("FAILED", "Failed")],
+                        max_length=250,
+                    ),
+                ),
+                ("started_at", models.DateTimeField(auto_now_add=True)),
+                ("finished_at", models.DateField(blank=True, null=True)),
+                ("error_message", models.TextField(blank=True)),
+                (
+                    "pipeline_run",
+                    models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to="pipelines.pipelinerun"),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ValidationResult',
+            name="ValidationResult",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('schema_name', models.CharField(max_length=250)),
-                ('table_name', models.CharField(max_length=250)),
-                ('column_name', models.CharField(max_length=250)),
-                ('check_type', models.CharField(choices=[('ROW_COUNT', 'Row_count'), ('COLUMN_TYPE', 'Column_type'), ('VALUE_OVERLAP', 'Value_overlap'), ('STATISTICAL', 'Statistical')], max_length=250)),
-                ('status', models.CharField(choices=[('PASS', 'Pass'), ('WARNING', 'Warning'), ('FAIL', 'Fail')], max_length=250)),
-                ('metrics', models.JSONField(default=dict)),
-                ('applied_thresholds', models.JSONField(default=dict)),
-                ('message', models.TextField(blank=True)),
-                ('column_policy', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='policies.columnpolicy')),
-                ('validation_run', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='validations.validationrun')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("schema_name", models.CharField(max_length=250)),
+                ("table_name", models.CharField(max_length=250)),
+                ("column_name", models.CharField(max_length=250)),
+                (
+                    "check_type",
+                    models.CharField(
+                        choices=[
+                            ("ROW_COUNT", "Row_count"),
+                            ("COLUMN_TYPE", "Column_type"),
+                            ("VALUE_OVERLAP", "Value_overlap"),
+                            ("STATISTICAL", "Statistical"),
+                        ],
+                        max_length=250,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("PASS", "Pass"), ("WARNING", "Warning"), ("FAIL", "Fail")], max_length=250
+                    ),
+                ),
+                ("metrics", models.JSONField(default=dict)),
+                ("applied_thresholds", models.JSONField(default=dict)),
+                ("message", models.TextField(blank=True)),
+                (
+                    "column_policy",
+                    models.ForeignKey(
+                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="policies.columnpolicy"
+                    ),
+                ),
+                (
+                    "validation_run",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="validations.validationrun"),
+                ),
             ],
         ),
     ]

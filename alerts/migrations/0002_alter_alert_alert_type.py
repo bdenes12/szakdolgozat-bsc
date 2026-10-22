@@ -4,15 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('alerts', '0001_initial'),
+        ("alerts", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='alert',
-            name='alert_type',
-            field=models.CharField(choices=[('ROW_COUNT', 'Row count'), ('COLUMN_TYPE', 'Column type'), ('VALUE_OVERLAP', 'Value overlap'), ('STATISTICAL', 'Statistical'), ('MISSING_POLICY', 'Missing policy')], max_length=250),
+            model_name="alert",
+            name="alert_type",
+            field=models.CharField(
+                choices=[
+                    ("ROW_COUNT", "Row count"),
+                    ("COLUMN_TYPE", "Column type"),
+                    ("VALUE_OVERLAP", "Value overlap"),
+                    ("STATISTICAL", "Statistical"),
+                    ("MISSING_POLICY", "Missing policy"),
+                ],
+                max_length=250,
+            ),
         ),
     ]

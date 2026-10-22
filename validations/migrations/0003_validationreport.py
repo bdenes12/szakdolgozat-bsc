@@ -5,19 +5,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('validations', '0002_alter_validationrun_finished_at'),
+        ("validations", "0002_alter_validationrun_finished_at"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ValidationReport',
+            name="ValidationReport",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('generated_at', models.DateTimeField(auto_now_add=True)),
-                ('html_content', models.TextField(blank=True)),
-                ('validation_run', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='validations.validationrun')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("generated_at", models.DateTimeField(auto_now_add=True)),
+                ("html_content", models.TextField(blank=True)),
+                (
+                    "validation_run",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="validations.validationrun"),
+                ),
             ],
         ),
     ]

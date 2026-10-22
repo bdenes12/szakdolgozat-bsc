@@ -5,15 +5,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('policies', '0003_anonfunction'),
+        ("policies", "0003_anonfunction"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='maskingstrategy',
-            name='anon_function',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='policies.anonfunction'),
+            model_name="maskingstrategy",
+            name="anon_function",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="policies.anonfunction"),
         ),
     ]

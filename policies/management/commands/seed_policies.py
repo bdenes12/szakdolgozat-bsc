@@ -1,50 +1,56 @@
 from django.core.management.base import BaseCommand
-from policies.models import DataCategory, AnonFunction, MaskingStrategy, ColumnPolicy
+
 from policies.anon_functions import ANON_FUNCTIONS
+from policies.models import AnonFunction, ColumnPolicy, DataCategory, MaskingStrategy
+
 
 class Command(BaseCommand):
-
     help = "Kezdő adatvédelmi kategóriák, maszkolási stratégiák és oszlop szabályok. Későbbiekben ezzel hozunk létre állandó szabályt egy állapot teszteléséhez."
-    
+
     def _qc(self, overlap, mean=None, std=None, ks=None, entropy=None):
         return {
-        "value_overlap": overlap,
-        "statistical": {
-            "mean": {"enabled": mean is not None, "max_rel_error": mean},
-            "std": {"enabled": std is not None, "max_rel_error": std},
-            "ks": {"enabled": ks is not None, "max_statistic": ks[0] if ks else None, "min_pvalue": ks[1] if ks else None},
-            "entropy": {"enabled": entropy is not None, "max_rel_error": entropy},
-        },
-    }
+            "value_overlap": overlap,
+            "statistical": {
+                "mean": {"enabled": mean is not None, "max_rel_error": mean},
+                "std": {"enabled": std is not None, "max_rel_error": std},
+                "ks": {
+                    "enabled": ks is not None,
+                    "max_statistic": ks[0] if ks else None,
+                    "min_pvalue": ks[1] if ks else None,
+                },
+                "entropy": {"enabled": entropy is not None, "max_rel_error": entropy},
+            },
+        }
 
     def handle(self, *args, **options):
-
         ColumnPolicy.objects.all().delete()
 
         data_category_direct, _ = DataCategory.objects.get_or_create(
             name="DIRECT_IDENTIFIER",
-            defaults={"description": "Közvetlen azonosító", "maximum_overlap": 0, "is_active": True}
+            defaults={"description": "Közvetlen azonosító", "maximum_overlap": 0, "is_active": True},
         )
 
         data_category_quasi, _ = DataCategory.objects.get_or_create(
             name="QUASI_IDENTIFIER",
-            defaults={"description": "Kvázi azonosító", "maximum_overlap": 10, "is_active": True}
+            defaults={"description": "Kvázi azonosító", "maximum_overlap": 10, "is_active": True},
         )
 
         data_category_sensitive, _ = DataCategory.objects.get_or_create(
-            name="SENSITIVE",
-            defaults={"description": "Érzékeny azonosító", "maximum_overlap": 30, "is_active": True}
+            name="SENSITIVE", defaults={"description": "Érzékeny azonosító", "maximum_overlap": 30, "is_active": True}
         )
 
         data_category_technical, _ = DataCategory.objects.get_or_create(
-            name="TECHNICAL",
-            defaults={"description": "Technikai azonosító", "maximum_overlap": 100, "is_active": True}
+            name="TECHNICAL", defaults={"description": "Technikai azonosító", "maximum_overlap": 100, "is_active": True}
         )
 
         for key, spec in ANON_FUNCTIONS.items():
             AnonFunction.objects.get_or_create(
                 name=key,
-                defaults={"function": spec['anon_function'], "is_column_name_parameter": spec['is_column_name_parameter'], "description": spec['description']}
+                defaults={
+                    "function": spec["anon_function"],
+                    "is_column_name_parameter": spec["is_column_name_parameter"],
+                    "description": spec["description"],
+                },
             )
 
         fn_fake_first_name = AnonFunction.objects.get(name="fake_first_name")
@@ -182,5 +188,3 @@ class Command(BaseCommand):
                 "is_active": True,
             },
         )
-    
-

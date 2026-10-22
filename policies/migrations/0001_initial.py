@@ -5,48 +5,63 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='DataCategory',
+            name="DataCategory",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=250, unique=True)),
-                ('description', models.TextField(blank=True)),
-                ('maximum_overlap', models.DecimalField(decimal_places=2, max_digits=5)),
-                ('is_active', models.BooleanField(default=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=250, unique=True)),
+                ("description", models.TextField(blank=True)),
+                ("maximum_overlap", models.DecimalField(decimal_places=2, max_digits=5)),
+                ("is_active", models.BooleanField(default=True)),
             ],
         ),
         migrations.CreateModel(
-            name='MaskingStrategy',
+            name="MaskingStrategy",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=250, unique=True)),
-                ('description', models.TextField(blank=True)),
-                ('parameters', models.JSONField(default=dict)),
-                ('anon_function', models.CharField(max_length=250)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=250, unique=True)),
+                ("description", models.TextField(blank=True)),
+                ("parameters", models.JSONField(default=dict)),
+                ("anon_function", models.CharField(max_length=250)),
             ],
         ),
         migrations.CreateModel(
-            name='ColumnPolicy',
+            name="ColumnPolicy",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('schema_name', models.CharField(max_length=250)),
-                ('table_name', models.CharField(max_length=250)),
-                ('column_name', models.CharField(max_length=250)),
-                ('target_environment', models.CharField(choices=[('STAGING', 'Staging'), ('DEVELOPMENT', 'Development')], default='STAGING', max_length=250)),
-                ('quality_checks', models.JSONField(default=dict)),
-                ('is_active', models.BooleanField(default=True)),
-                ('data_category', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='policies.datacategory')),
-                ('masking_strategy', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='policies.maskingstrategy')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("schema_name", models.CharField(max_length=250)),
+                ("table_name", models.CharField(max_length=250)),
+                ("column_name", models.CharField(max_length=250)),
+                (
+                    "target_environment",
+                    models.CharField(
+                        choices=[("STAGING", "Staging"), ("DEVELOPMENT", "Development")],
+                        default="STAGING",
+                        max_length=250,
+                    ),
+                ),
+                ("quality_checks", models.JSONField(default=dict)),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "data_category",
+                    models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to="policies.datacategory"),
+                ),
+                (
+                    "masking_strategy",
+                    models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to="policies.maskingstrategy"),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('schema_name', 'table_name', 'column_name', 'target_environment'), name='unique_policy')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("schema_name", "table_name", "column_name", "target_environment"), name="unique_policy"
+                    )
+                ],
             },
         ),
     ]

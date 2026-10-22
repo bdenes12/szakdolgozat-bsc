@@ -5,15 +5,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('policies', '0009_alter_columnpolicy_data_category'),
+        ("policies", "0009_alter_columnpolicy_data_category"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='columnpolicy',
-            name='masking_strategy',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='policies.maskingstrategy'),
+            model_name="columnpolicy",
+            name="masking_strategy",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to="policies.maskingstrategy"
+            ),
         ),
     ]

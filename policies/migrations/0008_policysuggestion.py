@@ -5,30 +5,50 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('policies', '0007_remove_columnpolicy_unique_policy_and_more'),
+        ("policies", "0007_remove_columnpolicy_unique_policy_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PolicySuggestion',
+            name="PolicySuggestion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('schema_name', models.CharField(max_length=250)),
-                ('table_name', models.CharField(max_length=250)),
-                ('column_name', models.CharField(max_length=250)),
-                ('data_type', models.CharField(blank=True, max_length=250)),
-                ('is_pk', models.BooleanField(default=False)),
-                ('is_fk', models.BooleanField(default=False)),
-                ('reason', models.CharField(blank=True, max_length=250)),
-                ('status', models.CharField(choices=[('PENDING', 'Pending'), ('ACCEPTED', 'Accepted'), ('REJECTED', 'Rejected')], max_length=50)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('suggested_category', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='policies.datacategory')),
-                ('suggested_strategy', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='policies.maskingstrategy')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("schema_name", models.CharField(max_length=250)),
+                ("table_name", models.CharField(max_length=250)),
+                ("column_name", models.CharField(max_length=250)),
+                ("data_type", models.CharField(blank=True, max_length=250)),
+                ("is_pk", models.BooleanField(default=False)),
+                ("is_fk", models.BooleanField(default=False)),
+                ("reason", models.CharField(blank=True, max_length=250)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("PENDING", "Pending"), ("ACCEPTED", "Accepted"), ("REJECTED", "Rejected")],
+                        max_length=50,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "suggested_category",
+                    models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to="policies.datacategory"),
+                ),
+                (
+                    "suggested_strategy",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="policies.maskingstrategy",
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('schema_name', 'table_name', 'column_name'), name='unique_policy_suggestion')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("schema_name", "table_name", "column_name"), name="unique_policy_suggestion"
+                    )
+                ],
             },
         ),
     ]

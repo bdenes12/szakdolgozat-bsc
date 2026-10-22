@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('policies', '0001_initial'),
+        ("policies", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='maskingstrategy',
-            name='parameters',
+            model_name="maskingstrategy",
+            name="parameters",
             field=models.JSONField(default=list),
         ),
     ]

@@ -113,7 +113,7 @@
                 <td><a href="{{ pipeline.get_absolute_url }}">{{ pipeline.status }}</a></td>
                 <td>{{ pipeline.started_at }}</td>
                 <td>{{ pipeline.finished_at }}</td>
-                <td>{{ pipeline.error_message }}</td>
+                <td class="cell-message">{{ pipeline.error_message }}</td>
             </tr>
             {% empty %}
             <tr>
