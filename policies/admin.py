@@ -1,7 +1,7 @@
 from admin_extra_buttons.api import ExtraButtonsMixin, button
 from django.contrib import admin
 
-from .forms import ColumnPolicyForm
+from .forms import ColumnPolicyForm, MaskingStrategyForm
 from .models import AnonFunction, ColumnPolicy, DataCategory, MaskingStrategy, PolicySuggestion
 from .services import SuggestionService
 
@@ -16,6 +16,7 @@ class DataCategoryAdmin(admin.ModelAdmin):
 @admin.register(MaskingStrategy)
 class MaskingStrategyAdmin(admin.ModelAdmin):
     list_display = ["__str__", "parameters"]
+    form = MaskingStrategyForm
 
 
 @admin.action(description="Policy aktiválása")

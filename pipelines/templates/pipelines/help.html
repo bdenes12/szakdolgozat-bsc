@@ -11,7 +11,7 @@
     <p>
         Az adatbázis oszlopok anonimizálása a
         <a href="{% url 'admin:policies_columnpolicy_changelist' %}">Column policies</a>
-        listában megadott szabályok szerint lépn érvénybe.
+        listában megadott szabályok szerint lép érvénybe.
         A maszkolási függvények az
         <a href="{% url 'admin:policies_anonfunction_changelist' %}">Anon functions</a>
         alatt előre definiáltak. A
@@ -23,7 +23,7 @@
         <li>STAGING esetén ki kell választani a felhasználót (Support vagy Analytics), akire a dinamikus maszkolás érvényes.</li>
         <li>Opcionális: statisztikai vizsgálat és értékátfedés-vizsgálat az oszlopon az alapértelmezett checkeken felül.</li>
         <li>TECHNICAL oszlopnál a maszkolási stratégia üresen maradhat - ezeket nem maszkoljuk.</li>
-        <li>Javaslatok generálás: a Column policies admin menüponton a <strong>GENERATE SUGGESTION</strong> gomb. Elfogadás / elutasítás a Policy suggestions adminban.</li>
+        <li>Javaslatok generálása: a Column policies admin menüponton a <strong>GENERATE SUGGESTION</strong> gomb. Elfogadás / elutasítás a Policy suggestions adminban.</li>
     </ul>
     <p>
         Ha egy érzékeny oszlopra nincs szabály (kivétel az elsődleges és idegen kulcs oszlopok), a validáció <strong>MISSING_POLICY</strong> riasztást generál.
@@ -35,7 +35,7 @@
     <h2>2. Főoldal - ETL indítása</h2>
     <p>
         A <a href="{% url 'pipelines:pipeline-list' %}">főoldalon</a> az <strong>ETL indítása!</strong> gomb
-        a production → staging → dev folyamatot elindítja, és érvényesíti a beállított szabályokat.
+        a production -> staging -> dev folyamatot elindítja, és érvényesíti a beállított szabályokat.
         A gomb a futás alatt egyszer nyomható meg.
     </p>
     <ul>
@@ -65,6 +65,21 @@
     <p>
         A logika és a webes nézetek: <code>pytest -q</code>.
         A négy Postgres DSN és a teljes ETL folyamat nincs a pytestben, ezek manuálisan kerülnek ellenőrzésre.
+    </p>
+</section>
+<section class="help-section">
+    <h2>6. Hibaüzenetek</h2>
+    <p>
+        Lehetséges hibaüzenetek:
+        <ul>
+            <li><strong>Adatbázis nem érhető el (PROD -> STAGING)</strong> - fut-e a prod konténer? <code>docker compose ps</code></li>
+            <li><strong>Sikertelen áttöltés (PROD -> STAGING)</strong> - fut-e a staging konténer? <code>docker compose ps</code></li>
+            <li><strong>Sikertelen áttöltés (STAGING -> DEV)</strong> - fut-e a dev konténer? <code>docker compose ps</code></li>
+            <li><strong>Adatbázis nem érhető el (Anonimizálás)</strong> - fut-e a staging konténer? <code>docker compose ps</code></li>
+            <li><strong>Adatbázis nem érhető el (Validáció)</strong> - fut-e mind a négy konténer? <code>docker compose ps</code></li>
+            <li><strong>Sikertelen lépés: Anonimizálás</strong> - van-e hibás paraméterű maszkolási stratégia a Column policies alatt?</li>            
+            <li><strong>Sikertelen lépés: Validáció</strong> - a részletek az app.log-ban vannak, a lépés nevével és a hiba típusával.</li>
+        </ul>
     </p>
 </section>
 

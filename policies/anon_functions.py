@@ -412,3 +412,34 @@ ANON_FUNCTIONS = {
         "description": "Állandó hamis SIRET a seedből.",
     },
 }
+
+
+def expected_parameters(function_name):
+    parameters = []
+
+    spec = ANON_FUNCTIONS.get(function_name)
+    if not spec or not spec.get("argumentum_data_types"):
+        return parameters
+
+    if spec.get("is_column_name_parameter"):
+        argumentum_data_types = spec.get("argumentum_data_types").split(",")[1:]
+
+    else:
+        argumentum_data_types = spec.get("argumentum_data_types").split(",")
+    
+    cleaned_list = [x.strip() for x in argumentum_data_types]
+
+    for argumentum in cleaned_list:
+        if " DEFAULT " in argumentum:
+            required = False
+            argumentum = argumentum.split(" DEFAULT ")[0]
+        else:
+            required = True
+
+        name = argumentum.split(" ")[0]
+        data_type = argumentum.split(" ")[1:]
+        data_type = " ".join(data_type)
+
+        parameters.append((name, data_type, required))
+
+    return parameters

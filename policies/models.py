@@ -54,7 +54,7 @@ class ColumnPolicy(models.Model):
         SUPPORT = "SUPPORT", "Support"
         ANALYTICS = "ANALYTICS", "Analytics"
 
-    masking_policy = models.CharField(max_length=50, choices=UserTypes.choices, blank=True, default="")
+    masking_policy = models.CharField(max_length=50, choices=UserTypes.choices, blank=True, default="", verbose_name="Maszkolt szerepkör")
     data_category = models.ForeignKey(DataCategory, null=True, blank=True, on_delete=models.PROTECT)
     masking_strategy = models.ForeignKey(MaskingStrategy, null=True, blank=True, on_delete=models.PROTECT)
     quality_checks = models.JSONField(default=dict)

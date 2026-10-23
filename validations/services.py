@@ -53,14 +53,14 @@ class ValidationService:
                 validation_run_obj.mark_completed()
                 logger.info(f"Validáció futás kész - pipeline_id: {pipeline_run.id}")
 
-        except (psycopg2.OperationalError, SQLAlchemyOperationalError) as e:
+        except (psycopg2.OperationalError, SQLAlchemyOperationalError):
             logger.error(f"Adatbázis nem érhető el - pipeline_id: {validation_run_obj.pipeline_run.id}")
-            validation_run_obj.mark_failed(err_message=str(e))
+            validation_run_obj.mark_failed(err_message="Adatbázis nem érhető el")
             raise
-
+        
         except Exception as e:
-            logger.error(f"Validáció futás sikertelen - pipeline_id: {pipeline_run.id}", exc_info=True)
-            validation_run_obj.mark_failed(str(e))
+            logger.error(f"Validáció futás sikertelen - pipeline_id: {pipeline_run.id}, hiba típusa: {type(e).__name__}")
+            validation_run_obj.mark_failed(err_message="Validáció sikertelen")
             raise
 
         return validation_run_obj

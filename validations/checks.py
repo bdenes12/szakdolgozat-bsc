@@ -16,7 +16,7 @@ COMPATIBLE_TYPES = {
     "date": {"date", "timestamp without time zone"},
     "timestamp without time zone": {"timestamp without time zone", "timestamp with time zone"},
 }
-# Az ETL folyamat során a PyArrow backend bizonyos típuskonverziókat végez (pl. integer → bigint), amelyeket a validáció elfogadható megfeleltetésként kezel, mivel funkcionálisan kompatibilisek.
+# Az ETL folyamat során a PyArrow backend bizonyos típuskonverziókat végez (pl. integer -> bigint), amelyeket a validáció elfogadható megfeleltetésként kezel, mivel funkcionálisan kompatibilisek.
 
 
 class BaseCheck(ABC):
