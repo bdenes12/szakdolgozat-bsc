@@ -65,6 +65,17 @@ class BaseCheck(ABC):
 
         return None
 
+    def _threshold(self, spec_part, key, default):
+        if spec_part is None:
+            return default
+
+        value = spec_part.get(key)
+
+        if value is None:
+            return default
+
+        return value  
+
     @abstractmethod
     def execute(self):
         pass
@@ -465,7 +476,7 @@ class StatisticalQualityCheck(BaseCheck):
                 metrics["dev_len"] = len(dev)
 
             if mean_enabled:
-                max_mean_rel_error = spec["mean"].get("max_rel_error") or 0.20
+                max_mean_rel_error = self._threshold(spec.get("mean"), "max_rel_error", 0.20)
                 applied_thresholds["max_mean_rel_error"] = max_mean_rel_error
 
                 if prod and dev:
@@ -477,7 +488,7 @@ class StatisticalQualityCheck(BaseCheck):
                             failed.append(f"Átlag relatív eltérése {mean_rel_error:.3g} (max. {max_mean_rel_error})")
 
             if std_enabled:
-                max_std_rel_error = spec["std"].get("max_rel_error") or 0.25
+                max_std_rel_error = self._threshold(spec.get("std"), "max_rel_error", 0.25)
                 applied_thresholds["max_std_rel_error"] = max_std_rel_error
 
                 if prod and dev:
@@ -489,8 +500,8 @@ class StatisticalQualityCheck(BaseCheck):
                             failed.append(f"Szórás relatív eltérése {std_rel_error:.3g} (max. {max_std_rel_error})")
 
             if ks_enabled:
-                max_statistic = spec["ks"].get("max_statistic") or 0.20
-                min_pvalue = spec["ks"].get("min_pvalue") or 0.05
+                max_statistic = self._threshold(spec.get("ks"), "max_statistic", 0.20)
+                min_pvalue = self._threshold(spec.get("ks"), "min_pvalue", 0.05)
 
                 applied_thresholds["max_statistic"] = max_statistic
                 applied_thresholds["min_pvalue"] = min_pvalue
@@ -514,7 +525,7 @@ class StatisticalQualityCheck(BaseCheck):
                 dev_counts = self._value_counts(self.dev_dsn, schema, table, column)
                 dev_entropy = self.calculate_entropy(dev_counts)
 
-                max_entropy_rel_error = spec["entropy"].get("max_rel_error") or 0.40
+                max_entropy_rel_error = self._threshold(spec.get("entropy"), "max_rel_error", 0.40)
                 applied_thresholds["max_entropy_rel_error"] = max_entropy_rel_error
 
                 metrics["prod_entropy"] = prod_entropy

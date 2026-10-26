@@ -14,7 +14,16 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
 0. másold a `.env.example`-t `.env`-be és töltsd ki
 1. `docker compose up -d --build`
 2. `docker compose exec web python manage.py createsuperuser`
-3. `docker compose exec web python manage.py seed_policies`
+3. `docker compose exec web python manage.py seed_policies --scenario alap`
+    A `--scenario` lehetséges értékei:
+    | Szcenárió | Mit mutat be |
+    |---|---|
+    | `alap` (default) | vegyes állapot: MAGAS, KÖZEPES és ALACSONY kockázatú táblák |
+    | `hibatlan` | a patients és invoices tábla teljesen lefedve, ezeknél kockázat NINCS |
+    | `szivargas` | maszkolatlan közvetlen azonosítók, MAGAS kockázatú táblák |
+    | `szigoru_stat` | szigorú statisztikai küszöbök, KÖZEPES kockázatú táblák |
+    | `hianyos` | nincs szabály, csak MISSING_POLICY riasztások jönnek létre |
+    | `staging` | az `alap` kiegészítve SUPPORT és ANALYTICS szerepkörös STAGING szabályokkal |
 4. `docker compose exec web python init_scripts/seed_production.py --patients 500`
 (Mérés: `powershell -Command "Measure-Command { docker compose exec web python init_scripts/seed_production.py --patients 5000 | Out-Default }"`)
 5. böngésző: `http://127.0.0.1:8000/pipelines/` (belépés: `http://127.0.0.1:8000/admin/login/`)
