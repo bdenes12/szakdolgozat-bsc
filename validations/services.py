@@ -19,6 +19,11 @@ from validations.models import ValidationReport, ValidationResult, ValidationRun
 
 
 class ValidationService:
+    def __init__(self, checks=None, policy_service=None, alert_service=None):
+        self.checks = checks
+        self.policy_service = policy_service or PolicyService()
+        self.alert_service = alert_service or AlertService()
+
     def run_validation(self, pipeline_run: PipelineRun):
         logger = setup_logger("validations", console=False)
 
@@ -30,7 +35,7 @@ class ValidationService:
 
         try:
             check_results = self.execute_checks()
-            environment, missing_policies = PolicyService().find_missing_policies(
+            environment, missing_policies = self.policy_service.find_missing_policies(
                 os.getenv("PRODUCTION_DSN"), ColumnPolicy.EnvironmentTypes.DEVELOPMENT
             )
 
@@ -40,9 +45,9 @@ class ValidationService:
                 fail_count = sum(1 for r in save_results if r.status == "FAIL")
                 logger.info(f"Checkek kész: {len(save_results)} eredmény, {fail_count} FAIL")
 
-                AlertService().create_alerts(validation_run_obj, save_results)
+                self.alert_service.create_alerts(validation_run_obj, save_results)
 
-                AlertService().create_missing_policy_alerts(validation_run_obj, missing_policies, environment)
+                self.alert_service.create_missing_policy_alerts(validation_run_obj, missing_policies, environment)
 
                 if missing_policies:
                     logger.warning(f"Hiányzó policy: {len(missing_policies)} oszlop")
@@ -57,15 +62,17 @@ class ValidationService:
             logger.error(f"Adatbázis nem érhető el - pipeline_id: {validation_run_obj.pipeline_run.id}")
             validation_run_obj.mark_failed(err_message="Adatbázis nem érhető el")
             raise
-        
+
         except Exception as e:
-            logger.error(f"Validáció futás sikertelen - pipeline_id: {pipeline_run.id}, hiba típusa: {type(e).__name__}")
+            logger.error(
+                f"Validáció futás sikertelen - pipeline_id: {pipeline_run.id}, hiba típusa: {type(e).__name__}"
+            )
             validation_run_obj.mark_failed(err_message="Validáció sikertelen")
             raise
 
         return validation_run_obj
 
-    def execute_checks(self):
+    def _default_checks(self):
         prod_dsn = os.getenv("PRODUCTION_DSN")
         staging_dsn = os.getenv("STAGING_DSN")
         dev_dsn = os.getenv("DEV_DSN")
@@ -75,8 +82,6 @@ class ValidationService:
 
         policies = PolicyService().get_active_policies(ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
 
-        results = []
-
         checks = [
             RowCountCheck(prod_dsn, staging_dsn, dev_dsn, policies),
             ColumnTypeCheck(prod_dsn, staging_dsn, dev_dsn, policies),
@@ -84,6 +89,12 @@ class ValidationService:
             StatisticalQualityCheck(prod_dsn, staging_dsn, dev_dsn, policies),
         ]
 
+        return checks
+
+    def execute_checks(self):
+        checks = self.checks if self.checks is not None else self._default_checks()
+        results = []
+        
         for check in checks:
             results.extend(check.execute())
 

@@ -243,15 +243,15 @@ class ValueOverlapCheck(BaseCheck):
         results = []
 
         for policy in self.policies:
+            if self._quality_checks(policy).get("value_overlap", True) is False:
+                continue
+            
             prod_col_values = self._column_values(
                 self.prod_dsn, policy.schema_name, policy.table_name, policy.column_name
             )
             dev_col_values = self._column_values(
                 self.dev_dsn, policy.schema_name, policy.table_name, policy.column_name
             )
-
-            if self._quality_checks(policy).get("value_overlap", True) is False:
-                continue
 
             metrics = self._calculate_overlap(prod_col_values, dev_col_values)
 
