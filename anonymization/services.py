@@ -204,3 +204,8 @@ def apply_policies():
     finally:
         if conn_staging:
             conn_staging.close()
+
+
+def run_full_anonymization():
+    apply_policies()
+    apply_staging_labels()
