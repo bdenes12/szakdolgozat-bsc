@@ -80,7 +80,7 @@ class ValidationService:
         if not prod_dsn or not staging_dsn or not dev_dsn:
             raise ValueError("Hiányzik a PRODUCTION_DSN, STAGING_DSN vagy DEV_DSN")
 
-        policies = PolicyService().get_active_policies(ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
+        policies = self.policy_service.get_active_policies(ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
 
         checks = [
             RowCountCheck(prod_dsn, staging_dsn, dev_dsn, policies),
@@ -94,7 +94,7 @@ class ValidationService:
     def execute_checks(self):
         checks = self.checks if self.checks is not None else self._default_checks()
         results = []
-        
+
         for check in checks:
             results.extend(check.execute())
 
