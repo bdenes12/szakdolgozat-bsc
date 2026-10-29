@@ -136,7 +136,7 @@ class SuggestionService:
             else:
                 name = f"{anon_fn_name}_{params[0]}"
 
-            strategy, created = MaskingStrategy.objects.get_or_create(
+            strategy, _ = MaskingStrategy.objects.get_or_create(
                 name=name,
                 defaults={
                     "description": "Automatikus javaslatból létrehozva",

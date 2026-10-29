@@ -1,7 +1,16 @@
+from unittest.mock import patch
+
 import pytest
 
 from policies.models import AnonFunction, ColumnPolicy, DataCategory, MaskingStrategy, PolicySuggestion
-from policies.services import SuggestionService
+from policies.services import SuggestionService, PolicyService
+
+
+PK_FK_CASES = [
+    ("patient_id", True, False, "pk"),
+    ("dept_id", False, True, "fk"),
+    ("email", True, False, "pk"),
+]
 
 
 @pytest.mark.django_db
@@ -12,11 +21,11 @@ def _category(name):
 
 
 @pytest.mark.django_db
-def _strategy():
-    fn, _ = AnonFunction.objects.get_or_create(name="hash", defaults={"function": "anon.hash"})
+def _strategy(name, function, parameters):
+    fn, _ = AnonFunction.objects.get_or_create(name=name, defaults={"function": function})
 
     obj, _ = MaskingStrategy.objects.get_or_create(
-        name="hash", defaults={"anon_function": fn, "parameters": [], "description": "hash"}
+        name=name, defaults={"anon_function": fn, "parameters": parameters, "description": name}
     )
 
     return obj
@@ -37,7 +46,7 @@ def _suggestion(column_name, category_name, strategy=None):
 
 @pytest.mark.django_db
 def test_accept_pending_creates_column_policy():
-    s = _suggestion("email", "DIRECT_IDENTIFIER", _strategy())
+    s = _suggestion("email", "DIRECT_IDENTIFIER", _strategy("hash", "anon.hash", []))
     ok, _ = SuggestionService().accept_suggestion([s])
 
     assert ok == 1
@@ -82,7 +91,7 @@ def test_accept_non_technical_without_strategy_skips():
 
 @pytest.mark.django_db
 def test_accept_duplicate_skips():
-    s = _suggestion("dup_col", "DIRECT_IDENTIFIER", _strategy())
+    s = _suggestion("dup_col", "DIRECT_IDENTIFIER", _strategy("hash", "anon.hash", []))
     ok, skipped = SuggestionService().accept_suggestion([s])
 
     assert ok == 1
@@ -94,3 +103,71 @@ def test_accept_duplicate_skips():
     assert skipped == 1
     assert s.status == PolicySuggestion.SuggestionStatus.ACCEPTED
     assert ColumnPolicy.objects.filter(column_name="dup_col").count() == 1
+
+
+@pytest.mark.django_db
+def test_generate_suggestions_creates_fuzzy_match(monkeypatch):
+    direct_identifier_category = _category("DIRECT_IDENTIFIER")
+    partial_email = _strategy("partial_email", "anon.partial_email", [])
+
+    monkeypatch.setenv("PRODUCTION_DSN", "x")
+
+    with (
+        patch.object(
+            PolicyService, "find_missing_policies", return_value=("DEVELOPMENT", [("public", "patients", "emial")])
+        ),
+        patch.object(
+            SuggestionService,
+            "get_column_metadata",
+            return_value={("public", "patients", "emial"): {"data_type": "text", "is_pk": False, "is_fk": False}},
+        ),
+    ):
+        suggestion_created = SuggestionService().generate_suggestions()
+
+    assert suggestion_created == 1
+    suggestion = PolicySuggestion.objects.get()
+    assert "name~email ratio:(0.80); fn=partial_email" == suggestion.reason
+    assert suggestion.suggested_category == direct_identifier_category
+    assert suggestion.suggested_strategy == partial_email
+
+
+@pytest.mark.django_db
+def test_generate_suggestions_skips_existing(monkeypatch):
+    _category("DIRECT_IDENTIFIER")
+    _strategy("partial_email", "anon.partial_email", [])
+
+    monkeypatch.setenv("PRODUCTION_DSN", "x")
+
+    with (
+        patch.object(
+            PolicyService, "find_missing_policies", return_value=("DEVELOPMENT", [("public", "patients", "emial")])
+        ),
+        patch.object(
+            SuggestionService,
+            "get_column_metadata",
+            return_value={("public", "patients", "emial"): {"data_type": "text", "is_pk": False, "is_fk": False}},
+        ),
+    ):
+        SuggestionService().generate_suggestions()
+        SuggestionService().generate_suggestions()
+
+    assert PolicySuggestion.objects.count() == 1
+    suggestion = PolicySuggestion.objects.get()
+    assert suggestion.schema_name == "public"
+    assert suggestion.table_name == "patients"
+    assert suggestion.column_name == "emial"
+    assert "name~email ratio:(0.80); fn=partial_email" == suggestion.reason
+
+
+@pytest.mark.parametrize("column_name, is_pk, is_fk, expected_reason", PK_FK_CASES)
+def test_suggest_for_column_pk_and_fk_are_technical(column_name, is_pk, is_fk, expected_reason):
+    result = SuggestionService().suggest_for_column(column_name, "integer", is_pk, is_fk)
+
+    assert result == ("TECHNICAL", None, [], expected_reason)
+
+
+def test_generate_suggestions_without_dsn_raises(monkeypatch):
+    monkeypatch.delenv("PRODUCTION_DSN", raising=False)
+
+    with pytest.raises(ValueError, match="Hiányzik a PRODUCTION_DSN"):
+        SuggestionService().generate_suggestions()
