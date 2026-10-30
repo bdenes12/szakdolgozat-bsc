@@ -7,6 +7,7 @@ ALERT_TYPES = {
     ValidationResult.CheckTypes.ROW_COUNT: Alert.AlertType.ROW_COUNT,
     ValidationResult.CheckTypes.VALUE_OVERLAP: Alert.AlertType.VALUE_OVERLAP,
     ValidationResult.CheckTypes.STATISTICAL: Alert.AlertType.STATISTICAL,
+    ValidationResult.CheckTypes.K_ANONYMITY: Alert.AlertType.K_ANONYMITY,
 }
 
 SEVERITY_TYPES = {
@@ -14,6 +15,7 @@ SEVERITY_TYPES = {
     ValidationResult.CheckTypes.ROW_COUNT: Alert.SeverityType.WARNING,
     ValidationResult.CheckTypes.VALUE_OVERLAP: Alert.SeverityType.CRITICAL,
     ValidationResult.CheckTypes.STATISTICAL: Alert.SeverityType.WARNING,
+    ValidationResult.CheckTypes.K_ANONYMITY: Alert.SeverityType.CRITICAL,
 }
 
 

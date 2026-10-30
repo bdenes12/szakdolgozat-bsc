@@ -58,7 +58,7 @@ class ColumnPolicy(models.Model):
     data_category = models.ForeignKey(DataCategory, null=True, blank=True, on_delete=models.PROTECT)
     masking_strategy = models.ForeignKey(MaskingStrategy, null=True, blank=True, on_delete=models.PROTECT)
     quality_checks = models.JSONField(default=dict)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, verbose_name="Aktív")
 
     class Meta:
         verbose_name_plural = "Column policies"

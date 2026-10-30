@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import defaultdict
 
 import numpy as np
 import psycopg2
@@ -74,7 +75,7 @@ class BaseCheck(ABC):
         if value is None:
             return default
 
-        return value  
+        return value
 
     @abstractmethod
     def execute(self):
@@ -245,7 +246,7 @@ class ValueOverlapCheck(BaseCheck):
         for policy in self.policies:
             if self._quality_checks(policy).get("value_overlap", True) is False:
                 continue
-            
+
             prod_col_values = self._column_values(
                 self.prod_dsn, policy.schema_name, policy.table_name, policy.column_name
             )
@@ -536,7 +537,9 @@ class StatisticalQualityCheck(BaseCheck):
                     metrics["entropy_rel_error"] = entropy_rel_error
 
                     if entropy_rel_error > max_entropy_rel_error:
-                        failed.append(f"Entrópia relatív eltérése {entropy_rel_error:.3g} (max. {max_entropy_rel_error})")
+                        failed.append(
+                            f"Entrópia relatív eltérése {entropy_rel_error:.3g} (max. {max_entropy_rel_error})"
+                        )
 
             if (
                 "mean_rel_error" not in metrics
@@ -562,6 +565,156 @@ class StatisticalQualityCheck(BaseCheck):
                     "applied_thresholds": applied_thresholds,
                     "message": "; ".join(failed) if failed else "A statisztikai eltérések a határon belül",
                     "column_policy": policy,
+                }
+            )
+
+        return results
+
+
+class KAnonymityCheck(BaseCheck):
+    def __init__(
+        self,
+        prod_dsn: str,
+        staging_dsn: str,
+        dev_dsn: str,
+        policies,
+        target_dsn: str,
+        target_schema: str,
+        target_label: str,
+        fail_status: str,
+    ):
+        super().__init__(prod_dsn, staging_dsn, dev_dsn, policies)
+        self.target_dsn = target_dsn
+        self.target_schema = target_schema
+        self.target_label = target_label
+        self.fail_status = fail_status
+
+    def _quasi_groups(self):
+        k_anonymity_by_tables = {}
+
+        for policy in self.policies:
+            k_anonymity = self._quality_checks(policy).get("k_anonymity") or {}
+            k_enabled = k_anonymity.get("enabled")
+
+            if k_enabled:
+                table = policy.table_name
+                column = policy.column_name
+
+                current_k = k_anonymity.get("min_k")
+
+                if table not in k_anonymity_by_tables:
+                    k_anonymity_by_tables[table] = {"columns": [], "min_k": 0}
+
+                if column not in k_anonymity_by_tables[table]["columns"]:
+                    k_anonymity_by_tables[table]["columns"].append(column)
+
+                k_anonymity_by_tables[table]["min_k"] = max(k_anonymity_by_tables[table]["min_k"], current_k or 5)
+
+        return k_anonymity_by_tables
+
+    def _class_sizes(self, dsn, schema, table, columns):
+        result = []
+
+        conn = None
+
+        try:
+            conn = psycopg2.connect(dsn)
+
+            with conn:
+                with conn.cursor() as cur:
+                    sql_columns = [sql.Identifier(column) for column in columns]
+
+                    cur.execute(
+                        sql.SQL(
+                            "SELECT {column_names}, COUNT(*) AS size FROM {schema}.{table_name} GROUP BY {column_names} ORDER BY size"
+                        ).format(
+                            column_names = sql.SQL(", ").join(sql_columns),
+                            schema=sql.Identifier(schema),
+                            table_name=sql.Identifier(table),
+                        )
+                    )
+
+                    result = [row[-1] for row in cur.fetchall()]
+
+            return result
+
+        finally:
+            if conn:
+                conn.close()
+
+    def _k_metrics(self, sizes, min_k):
+        result = {}
+
+        if not sizes:
+            return None
+
+        k = min(sizes)
+        n_classes = len(sizes)
+        n_rows = sum(sizes)
+        unique_ratio = sizes.count(1) / n_rows
+        below_k_ratio = sum([size for size in sizes if size < min_k]) / n_rows
+
+        result = {
+            "k": k,
+            "n_classes": n_classes,
+            "n_rows": n_rows,
+            "unique_ratio": unique_ratio,
+            "below_k_ratio": below_k_ratio,
+        }
+
+        return result
+
+    def execute(self):
+        results = []
+
+        k_anonymity_by_tables = self._quasi_groups()
+
+        if not k_anonymity_by_tables:
+            return results
+
+        for table_name, data in k_anonymity_by_tables.items():
+            prod_sizes = self._class_sizes(self.prod_dsn, "public", table_name, data["columns"])
+            target_sizes = self._class_sizes(self.target_dsn, self.target_schema, table_name, data["columns"])
+
+            if not prod_sizes or not target_sizes:
+                continue
+
+            prod_k_metrics = self._k_metrics(prod_sizes, data["min_k"])
+            target_k_metrics = self._k_metrics(target_sizes, data["min_k"])
+
+            status = (
+                ValidationResult.ValidationResultStatuses.PASS
+                if target_k_metrics["k"] >= data["min_k"]
+                else self.fail_status
+            )
+
+            message = (
+                f"A k-anonimitás teljesül (k={target_k_metrics['k']}, min_k={data['min_k']})"
+                if status == ValidationResult.ValidationResultStatuses.PASS
+                else f"A k-anonimitás sérül: k={target_k_metrics['k']} (min_k={data['min_k']})"
+            )
+
+            results.append(
+                {
+                    "schema_name": "public",
+                    "table_name": table_name,
+                    "column_name": ", ".join(data["columns"]),
+                    "check_type": ValidationResult.CheckTypes.K_ANONYMITY,
+                    "status": status,
+                    "applied_thresholds": {"min_k": data["min_k"]},
+                    "metrics": {
+                        "target": self.target_label,
+                        "prod_k": prod_k_metrics["k"],
+                        "prod_n_classes": prod_k_metrics["n_classes"],
+                        "prod_unique_ratio": prod_k_metrics["unique_ratio"],
+                        "prod_below_k_ratio": prod_k_metrics["below_k_ratio"],
+                        "k": target_k_metrics["k"],
+                        "n_classes": target_k_metrics["n_classes"],
+                        "unique_ratio": target_k_metrics["unique_ratio"],
+                        "below_k_ratio": target_k_metrics["below_k_ratio"],
+                    },
+                    "column_policy": None,
+                    "message": message
                 }
             )
 

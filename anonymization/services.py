@@ -103,7 +103,7 @@ def apply_staging_labels():
 
                     label = "MASKED WITH FUNCTION " + mask_exp
 
-                    if not policy.masking_policy:
+                    if not policy.masking_policy or policy.masking_policy == ColumnPolicy.UserTypes.ANALYTICS:
                         skipped += 1
                         continue
 
@@ -206,6 +206,69 @@ def apply_policies():
             conn_staging.close()
 
 
+def apply_analytics_views():
+    active_staging_analytics_policies = (
+        PolicyService()
+        .get_active_policies(environment=ColumnPolicy.EnvironmentTypes.STAGING)
+        .filter(masking_policy=ColumnPolicy.UserTypes.ANALYTICS)
+        .order_by("table_name")
+    )
+
+    conn_staging = None
+    active_staging_analytics_policies_by_tables = {}
+
+    try:
+        dsn_staging = os.getenv("STAGING_DSN")
+        if not dsn_staging:
+            raise ValueError("Hiányzik a STAGING_DSN")
+
+        conn_staging = psycopg2.connect(dsn_staging)
+
+        with conn_staging:
+            with conn_staging.cursor() as cur_staging:
+                cur_staging.execute(
+                    sql.SQL("SELECT schemaname, matviewname FROM pg_matviews WHERE schemaname = 'analytics' ")
+                )
+                matviews = cur_staging.fetchall()
+
+                for matview in matviews:
+                    cur_staging.execute(
+                        sql.SQL("DROP MATERIALIZED VIEW IF EXISTS {schemaname}.{matviewname}").format(
+                            schemaname=sql.Identifier(matview[0]), matviewname=sql.Identifier(matview[1])
+                        )
+                    )
+
+                for table_name, policy in groupby(active_staging_analytics_policies, key=lambda x: x.table_name):
+                    active_staging_analytics_policies_by_tables[table_name] = list(policy)
+
+                column_cnt = 0
+                view_cnt = 0
+                for table_name, policies in active_staging_analytics_policies_by_tables.items():
+                    columns = []
+                    for policy in policies:
+                        if policy.masking_strategy is not None:
+                            mask_exp = build_mask_expression(policy)
+                            columns.append(sql.SQL("{} AS {}").format(mask_exp, sql.Identifier(policy.column_name)))
+                            column_cnt += 1
+                        
+                        else:
+                            columns.append(sql.Identifier(policy.column_name))
+                            column_cnt += 1
+
+                    cur_staging.execute(sql.SQL("CREATE MATERIALIZED VIEW analytics.{table_name} AS SELECT {} FROM public.{table_name}").format(
+                        sql.SQL(", ").join(columns),
+                        table_name=sql.Identifier(table_name)
+                    ))
+                    view_cnt += 1
+
+                logger.info(f"ANALYTICS nézetek: {view_cnt} materialized view és {column_cnt} oszlop jött létre")
+
+    finally:
+        if conn_staging:
+            conn_staging.close()
+
+
 def run_full_anonymization():
     apply_policies()
     apply_staging_labels()
+    apply_analytics_views()

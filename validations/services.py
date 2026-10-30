@@ -13,7 +13,13 @@ from config.logger import setup_logger
 from pipelines.models import PipelineRun
 from policies.models import ColumnPolicy
 from policies.services import PolicyService
-from validations.checks import ColumnTypeCheck, RowCountCheck, StatisticalQualityCheck, ValueOverlapCheck
+from validations.checks import (
+    ColumnTypeCheck,
+    KAnonymityCheck,
+    RowCountCheck,
+    StatisticalQualityCheck,
+    ValueOverlapCheck,
+)
 from validations.labels import METRIC_LABELS
 from validations.models import ValidationReport, ValidationResult, ValidationRun
 
@@ -76,17 +82,24 @@ class ValidationService:
         prod_dsn = os.getenv("PRODUCTION_DSN")
         staging_dsn = os.getenv("STAGING_DSN")
         dev_dsn = os.getenv("DEV_DSN")
+        analyst_staging_dsn = os.getenv("STAGING_ANALYST_DSN")
 
         if not prod_dsn or not staging_dsn or not dev_dsn:
             raise ValueError("Hiányzik a PRODUCTION_DSN, STAGING_DSN vagy DEV_DSN")
+        if not analyst_staging_dsn:
+            raise ValueError("Hiányzik a STAGING_ANALYST_DSN")
 
         policies = self.policy_service.get_active_policies(ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
+
+        analytics_policies = self.policy_service.get_active_policies(ColumnPolicy.EnvironmentTypes.STAGING).filter(masking_policy=ColumnPolicy.UserTypes.ANALYTICS)
 
         checks = [
             RowCountCheck(prod_dsn, staging_dsn, dev_dsn, policies),
             ColumnTypeCheck(prod_dsn, staging_dsn, dev_dsn, policies),
             ValueOverlapCheck(prod_dsn, staging_dsn, dev_dsn, policies),
             StatisticalQualityCheck(prod_dsn, staging_dsn, dev_dsn, policies),
+            KAnonymityCheck(prod_dsn, staging_dsn, dev_dsn, policies, dev_dsn, "public", "dev", ValidationResult.ValidationResultStatuses.WARNING),
+            KAnonymityCheck(prod_dsn, staging_dsn, dev_dsn, analytics_policies, analyst_staging_dsn, "analytics", "analytics", ValidationResult.ValidationResultStatuses.FAIL),
         ]
 
         return checks
@@ -126,7 +139,7 @@ class ValidationService:
             validation_run=results[0].validation_run,
             schema_name=schema,
             table_name=table,
-            check_type=ValidationResult.CheckTypes.VALUE_OVERLAP,
+            check_type=ValidationResult.CheckTypes.VALUE_OVERLAP or ValidationResult.CheckTypes.K_ANONYMITY,
             status=ValidationResult.ValidationResultStatuses.FAIL,
         ).exists():
             return "MAGAS"
@@ -177,6 +190,9 @@ class ValidationService:
         fail_statistical = results.filter(
             status=ValidationResult.ValidationResultStatuses.FAIL, check_type=ValidationResult.CheckTypes.STATISTICAL
         ).count()
+        fail_k_anonymity = results.filter(
+            status=ValidationResult.ValidationResultStatuses.FAIL, check_type=ValidationResult.CheckTypes.K_ANONYMITY
+        ).count()
 
         grouped_results = defaultdict(list)
         grouped_alerts = defaultdict(list)
@@ -216,6 +232,7 @@ class ValidationService:
             "fail_column_type": fail_column_type,
             "fail_value_overlap": fail_value_overlap,
             "fail_statistical": fail_statistical,
+            "fail_k_anonymity": fail_k_anonymity,
             "tables": tables,
             "generated_at": timezone.now(),
             "labels": METRIC_LABELS,

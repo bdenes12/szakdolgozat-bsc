@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from .anon_functions import expected_parameters
 from .models import ColumnPolicy, MaskingStrategy
@@ -19,6 +20,8 @@ class ColumnPolicyForm(forms.ModelForm):
     statistical_ks = forms.BooleanField(required=False, initial=False, label="Kolmogorov-Smirnov (eloszlás)")
     statistical_entropy = forms.BooleanField(required=False, initial=False, label="Shannon-entrópia")
 
+    k_anonymity = forms.BooleanField(required=False, initial=False, label="K-Anonimitás")
+
     max_mean_rel_error = forms.DecimalField(
         required=False, max_digits=4, decimal_places=4, label="Átlag - max. relatív eltérés (0.20 = 20%)"
     )
@@ -33,6 +36,12 @@ class ColumnPolicyForm(forms.ModelForm):
     )
     max_entropy_rel_error = forms.DecimalField(
         required=False, max_digits=4, decimal_places=4, label="Entrópia - max. relatív eltérés (0.40 = 40%)"
+    )
+    k_anonymity_value = forms.IntegerField(
+        required=False,
+        initial=5,
+        validators=[MinValueValidator(2), MaxValueValidator(999)],
+        label="K-paraméter (alapértelmezett 5)",
     )
 
     class Meta:
@@ -57,6 +66,8 @@ class ColumnPolicyForm(forms.ModelForm):
         ks = stat.get("ks") or {}
         entropy = stat.get("entropy") or {}
 
+        k_anonymity = qc.get("k_anonymity") or {}
+
         self.fields["value_overlap"].initial = qc.get("value_overlap", True)
 
         self.fields["statistical_mean"].initial = mean.get("enabled")
@@ -69,6 +80,9 @@ class ColumnPolicyForm(forms.ModelForm):
         self.fields["max_ks_statistic"].initial = ks.get("max_statistic")
         self.fields["min_ks_pvalue"].initial = ks.get("min_pvalue")
         self.fields["max_entropy_rel_error"].initial = entropy.get("max_rel_error")
+
+        self.fields["k_anonymity"].initial = k_anonymity.get("enabled")
+        self.fields["k_anonymity_value"].initial = k_anonymity.get("min_k")
 
     def clean(self):
         cleaned_data = super().clean()
@@ -89,6 +103,10 @@ class ColumnPolicyForm(forms.ModelForm):
         environment = cleaned_data.get("target_environment")
         role = cleaned_data.get("masking_policy")
 
+        k_anonymity_enabled = cleaned_data.get("k_anonymity")
+
+        masking_strategy = cleaned_data.get("masking_strategy")
+        
         if mean_enabled and max_mean_rel_error is None:
             raise forms.ValidationError(
                 "Ha az átlag statisztika engedélyezve van, meg kell adni a maximális relatív hibát!"
@@ -116,6 +134,19 @@ class ColumnPolicyForm(forms.ModelForm):
 
         if environment == ColumnPolicy.EnvironmentTypes.STAGING and not role:
             raise forms.ValidationError("A maszkolt szerepkör mező STAGING környezetben kötelező, üresen nem hagyható!")
+
+        is_generalize = masking_strategy is not None and masking_strategy.anon_function.name.startswith("generalize_")
+        is_analytics = environment == ColumnPolicy.EnvironmentTypes.STAGING and role == ColumnPolicy.UserTypes.ANALYTICS
+        
+        if is_generalize and not is_analytics:
+            raise forms.ValidationError(
+                "A generalize_* stratégia csak STAGING környezeten és ANALYTICS szerepkörön engedélyezett!"
+            )
+
+        if k_anonymity_enabled and environment != ColumnPolicy.EnvironmentTypes.DEVELOPMENT and not is_analytics:
+            raise forms.ValidationError(
+                "A k-anonimitás csak DEVELOPMENT környezeten, vagy STAGING környezeten ANALYTICS szerepkörrel engedélyezett!"
+            )
 
         return cleaned_data
 
@@ -153,6 +184,7 @@ class ColumnPolicyForm(forms.ModelForm):
                     else None,
                 },
             },
+            "k_anonymity": {"enabled": self.cleaned_data.get("k_anonymity"), "min_k": self.cleaned_data.get("k_anonymity_value") or 5},
         }
 
         if commit:
@@ -203,7 +235,7 @@ class MaskingStrategyForm(forms.ModelForm):
             if isinstance(value, bool):
                 self.add_error("parameters", f"A '{name}' paraméter nem lehet logikai érték.")
                 continue
-            
+
             if value is not None and not isinstance(value, PARAMETER_TYPES.get(data_type, (str,))):
                 self.add_error(
                     "parameters",

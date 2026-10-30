@@ -33,4 +33,15 @@ METRIC_LABELS = {
     "max_statistic": "Max. KS-távolság",
     "min_pvalue": "Min. p-érték",
     "max_entropy_rel_error": "Max. entrópiaeltérés",
+    # K-anonimitás
+    "target": "Cél",
+    "prod_k": "k (prod)",
+    "prod_n_classes": "Csoportok száma (prod)",
+    "prod_unique_ratio": "Egyedi rekordok aránya (prod)",
+    "prod_below_k_ratio": "Küszöb alatti rekordok aránya (prod)",
+    "k": "k",
+    "n_classes": "Csoportok száma",
+    "unique_ratio": "Egyedi rekordok aránya",
+    "below_k_ratio": "Küszöb alatti rekordok aránya",
+    "min_k": "Minimális k",
 }

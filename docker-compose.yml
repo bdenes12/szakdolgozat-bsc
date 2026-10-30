@@ -92,6 +92,7 @@ services:
       PRODUCTION_DSN: postgresql://user_pg:password_pg@prod_db:5432/prod
       STAGING_DSN: postgresql://user_pg:password_pg@staging_db:5432/staging
       DEV_DSN: postgresql://user_pg:password_pg@dev_db:5432/dev
+      STAGING_ANALYST_DSN: postgresql://analyst_user:analyst_user@staging_db:5432/staging
     depends_on:
       prod_db:
         condition: service_healthy

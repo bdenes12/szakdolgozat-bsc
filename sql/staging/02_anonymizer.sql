@@ -19,4 +19,10 @@ SECURITY LABEL FOR support ON ROLE support_user IS 'MASKED';
 SECURITY LABEL FOR analytics ON ROLE analyst_user IS 'MASKED';
 
 CREATE SCHEMA dev_export;
+CREATE SCHEMA analytics;
+
+GRANT USAGE ON SCHEMA analytics TO analyst_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA analytics GRANT SELECT ON TABLES TO analyst_user;
+
+
 

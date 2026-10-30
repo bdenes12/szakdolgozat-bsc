@@ -4,9 +4,10 @@ from policies.anon_functions import ANON_FUNCTIONS
 from policies.models import AnonFunction, ColumnPolicy, DataCategory, MaskingStrategy
 
 
-def qc(overlap, mean=None, std=None, ks=None, entropy=None):
+def qc(overlap, mean=None, std=None, ks=None, entropy=None, k_anon=None):
     return {
         "value_overlap": overlap,
+        "k_anonymity": {"enabled": k_anon is not None, "min_k": k_anon},
         "statistical": {
             "mean": {"enabled": mean is not None, "max_rel_error": mean},
             "std": {"enabled": std is not None, "max_rel_error": std},
@@ -25,6 +26,7 @@ STRATEGIES = {
     "partial_email": ("partial_email", [], "Részleges e-mail maszk."),
     "noise_15": ("noise", [0.15], "Numerikus zaj, 15%. Több összegoszlopra is rátehető."),
     "fake_city": ("fake_city", [], "Hamis városnév, paraméter nélkül."),
+    "fake_postcode": ("fake_postcode", [], "Hamis irányítószám, paraméter nélkül."),
     "fake_last_name": ("fake_last_name", [], "Hamis vezetéknév, paraméter nélkül."),
     "dummy_name": ("dummy_name", [], "Dummy név, paraméter nélkül."),
     "dummy_phone": ("dummy_phone_number", [], "Dummy telefonszám, paraméter nélkül."),
@@ -32,14 +34,27 @@ STRATEGIES = {
     "date_noise_1y": ("dnoise", ["365 days"], "Dátum zaj, 1 év intervallummal."),
     "noise_50": ("noise", [0.5], "Numerikus zaj, 50%. Több összegoszlopra is rátehető."),
     "partial_account": ("partial", [2, "****", 2], "Részleges maszk."),
+    "generalize_decade": ("generalize_daterange", ["decade"], "Dátum évtizedre bontás."),
+    "partial_postcode": ("partial", [4, "**", 0], "Részleges irányítószám, [4, '**', 0]."),
 }
 
 
 SCENARIOS = {
     "alap": [
-        ("public", "patients", "gender", "DIRECT", None, qc(True), "DEVELOPMENT", ""),
+        ("public", "patients", "gender", "DIRECT", None, qc(True, k_anon=5), "DEVELOPMENT", ""),
         ("public", "patients", "email", "DIRECT", "partial_email", qc(True), "DEVELOPMENT", ""),
         ("public", "patients", "first_name", "DIRECT", "fake_first_name", qc(True), "DEVELOPMENT", ""),
+        ("public", "patients", "birth_date", "QUASI", "date_noise_1y", qc(False, k_anon=5), "DEVELOPMENT", ""),
+        (
+            "public",
+            "patient_addresses",
+            "postal_code",
+            "QUASI",
+            "fake_postcode",
+            qc(False, k_anon=5),
+            "DEVELOPMENT",
+            "",
+        ),
         (
             "public",
             "invoices",
@@ -191,6 +206,72 @@ SCENARIOS = {
         ("public", "patients", "first_name", "DIRECT", "fake_first_name", qc(True), "STAGING", "ANALYTICS"),
         ("public", "invoices", "paid_amount", "SENSITIVE", "noise_15", qc(False), "STAGING", "ANALYTICS"),
     ],
+    "analytics": [
+        ("public", "patients", "gender", "DIRECT", None, qc(True, k_anon=5), "DEVELOPMENT", ""),
+        ("public", "patients", "email", "DIRECT", "partial_email", qc(True), "DEVELOPMENT", ""),
+        ("public", "patients", "first_name", "DIRECT", "fake_first_name", qc(True), "DEVELOPMENT", ""),
+        ("public", "patients", "birth_date", "QUASI", "date_noise_1y", qc(False, k_anon=5), "DEVELOPMENT", ""),
+        (
+            "public",
+            "patient_addresses",
+            "postal_code",
+            "QUASI",
+            "fake_postcode",
+            qc(False, k_anon=5),
+            "DEVELOPMENT",
+            "",
+        ),
+        (
+            "public",
+            "invoices",
+            "paid_amount",
+            "SENSITIVE",
+            "noise_15",
+            qc(False, mean=0.0001, std=0.25, ks=(0.20, 0.05)),
+            "DEVELOPMENT",
+            "",
+        ),
+        (
+            "public",
+            "invoices",
+            "total_amount",
+            "SENSITIVE",
+            "noise_15",
+            qc(False, mean=0.20, std=0.25, ks=(0.20, 0.05)),
+            "DEVELOPMENT",
+            "",
+        ),
+        ("public", "patients", "email", "DIRECT", "partial_email", qc(True), "STAGING", "SUPPORT"),
+        (
+            "public",
+            "patient_addresses",
+            "city",
+            "QUASI",
+            "fake_city",
+            qc(True, entropy=0.40),
+            "DEVELOPMENT",
+            "",
+        ),
+        ("public", "patients", "patient_id", "TECHNICAL", None, qc(False), "STAGING", "ANALYTICS"),
+        ("public", "patients", "birth_date", "QUASI", "generalize_decade", qc(False, k_anon=5), "STAGING", "ANALYTICS"),
+        ("public", "patients", "gender", "QUASI", None, qc(False, k_anon=5), "STAGING", "ANALYTICS"),
+        ("public", "patient_addresses", "patient_id", "TECHNICAL", None, qc(False), "STAGING", "ANALYTICS"),
+        (
+            "public",
+            "patient_addresses",
+            "postal_code",
+            "QUASI",
+            "partial_postcode",
+            qc(False, k_anon=5),
+            "STAGING",
+            "ANALYTICS",
+        ),
+        ("public", "encounters", "encounter_id", "TECHNICAL", None, qc(False), "STAGING", "ANALYTICS"),
+        ("public", "encounters", "patient_id", "TECHNICAL", None, qc(False), "STAGING", "ANALYTICS"),
+        ("public", "diagnoses", "encounter_id", "TECHNICAL", None, qc(False), "STAGING", "ANALYTICS"),
+        ("public", "diagnoses", "icd_code", "SENSITIVE", None, qc(False), "STAGING", "ANALYTICS"),
+        ("public", "diagnoses", "severity", "SENSITIVE", None, qc(False), "STAGING", "ANALYTICS"),
+    ],
 }
 
 
@@ -260,9 +341,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "--scenario",
             type=str,
-            choices=["alap", "hibatlan", "szivargas", "szigoru_stat", "hianyos", "staging"],
+            choices=["alap", "hibatlan", "szivargas", "szigoru_stat", "hianyos", "staging", "analytics"],
             default="alap",
-            help="A betöltendő policy-szcenárió neve az alábbiak valamelyike lehet: alap, hibatlan, szivargas, szigoru_stat, hianyos, staging",
+            help="A betöltendő policy-szcenárió neve az alábbiak valamelyike lehet: alap, hibatlan, szivargas, szigoru_stat, hianyos, staging, analytics",
         )
 
     def handle(self, *args, **options):

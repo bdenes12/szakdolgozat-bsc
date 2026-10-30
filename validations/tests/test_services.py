@@ -182,3 +182,13 @@ def test_missing_policies_passed_to_alert_service():
     mock_alert_service.create_missing_policy_alerts.assert_called_once_with(
         validation_run, [("public", "table", "column")], "DEVELOPMENT"
     )
+
+
+def test_default_checks_requires_analyst_dsn(monkeypatch):
+    monkeypatch.setenv("PRODUCTION_DSN", "x")
+    monkeypatch.setenv("STAGING_DSN", "x")
+    monkeypatch.setenv("DEV_DSN", "x")
+    monkeypatch.delenv("STAGING_ANALYST_DSN", raising=False)
+    
+    with pytest.raises(ValueError, match="STAGING_ANALYST_DSN"):
+        ValidationService()._default_checks()

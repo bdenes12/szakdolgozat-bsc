@@ -51,6 +51,7 @@ class ColumnPolicyAdmin(ExtraButtonsMixin, admin.ModelAdmin):
         ("statistical_std", "max_std_rel_error"),
         ("statistical_ks", "max_ks_statistic", "min_ks_pvalue"),
         ("statistical_entropy", "max_entropy_rel_error"),
+        ("k_anonymity", "k_anonymity_value"),
     ]
     actions = [activate, deactive]
 

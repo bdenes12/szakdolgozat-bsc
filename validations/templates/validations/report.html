@@ -127,9 +127,9 @@
                 new Chart(ctx_check, {
                     type:'bar',
                     data: {
-                        labels: ['ROW_COUNT', 'COLUMN_TYPE', 'VALUE_OVERLAP', 'STATISTICAL'],
+                        labels: ['ROW_COUNT', 'COLUMN_TYPE', 'VALUE_OVERLAP', 'STATISTICAL', 'K_ANONYMITY'],
                         datasets: [{
-                            data: [{{ fail_row_count }}, {{ fail_column_type }}, {{ fail_value_overlap }}, {{ fail_statistical }}],
+                            data: [{{ fail_row_count }}, {{ fail_column_type }}, {{ fail_value_overlap }}, {{ fail_statistical }}, {{ fail_k_anonymity }}],
                             backgroundColor: 'rgb(31, 41, 55)'
                         }]
                     },

@@ -42,6 +42,7 @@ class ValidationResult(models.Model):
         COLUMN_TYPE = "COLUMN_TYPE", "Column_type"
         VALUE_OVERLAP = "VALUE_OVERLAP", "Value_overlap"
         STATISTICAL = "STATISTICAL", "Statistical"
+        K_ANONYMITY = "K_ANONYMITY", "K_anonymity"
 
     check_type = models.CharField(max_length=250, choices=CheckTypes.choices)
 
