@@ -426,7 +426,7 @@ def expected_parameters(function_name):
 
     else:
         argumentum_data_types = spec.get("argumentum_data_types").split(",")
-    
+
     cleaned_list = [x.strip() for x in argumentum_data_types]
 
     for argumentum in cleaned_list:

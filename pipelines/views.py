@@ -72,7 +72,7 @@ def pipeline_detail_view(request, my_id):
     results = []
     alerts = []
 
-    not_resolved_alerts = Alert.objects.filter(validation_run=validation_run, is_resolved=False).count()
+    unresolved_alerts = Alert.objects.filter(validation_run=validation_run, is_resolved=False).count()
 
     if validation_run:
         results = ValidationResult.objects.filter(validation_run=validation_run)
@@ -85,7 +85,7 @@ def pipeline_detail_view(request, my_id):
         "validation_run": validation_run,
         "validation_results": results,
         "alerts": alerts,
-        "not_resolved_alerts": not_resolved_alerts,
+        "unresolved_alerts": unresolved_alerts,
         "labels": METRIC_LABELS,
     }
 

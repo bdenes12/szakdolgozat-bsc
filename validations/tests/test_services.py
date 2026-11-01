@@ -114,7 +114,7 @@ def test_run_validation_saves_results_and_completes():
 
 
 @pytest.mark.django_db
-def test_alert_error_rolls_back_results(): # Le lehet tesztelni úgy is, hogy az atomic sort kommentezem és úgy lefuttatom és akkor látom hogy FAIL
+def test_alert_error_rolls_back_results():  # Le lehet tesztelni úgy is, hogy az atomic sort kommentezem és úgy lefuttatom és akkor látom hogy FAIL
     pipeline = PipelineRun.objects.create(status=PipelineRun.RunStatuses.RUNNING)
 
     mock_check = MagicMock()
@@ -189,6 +189,6 @@ def test_default_checks_requires_analyst_dsn(monkeypatch):
     monkeypatch.setenv("STAGING_DSN", "x")
     monkeypatch.setenv("DEV_DSN", "x")
     monkeypatch.delenv("STAGING_ANALYST_DSN", raising=False)
-    
+
     with pytest.raises(ValueError, match="STAGING_ANALYST_DSN"):
         ValidationService()._default_checks()

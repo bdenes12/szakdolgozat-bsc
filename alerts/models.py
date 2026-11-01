@@ -16,7 +16,6 @@ class Alert(models.Model):
         MISSING_POLICY = "MISSING_POLICY", "Missing policy"
         K_ANONYMITY = "K_ANONYMITY", "K_anonymity"
 
-
     alert_type = models.CharField(max_length=250, choices=AlertType.choices)
 
     class SeverityType(models.TextChoices):

@@ -1,8 +1,11 @@
+import os
+
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from .anon_functions import expected_parameters
 from .models import ColumnPolicy, MaskingStrategy
+from .services import PolicyService
 
 PARAMETER_TYPES = {
     "integer": (int,),
@@ -106,7 +109,7 @@ class ColumnPolicyForm(forms.ModelForm):
         k_anonymity_enabled = cleaned_data.get("k_anonymity")
 
         masking_strategy = cleaned_data.get("masking_strategy")
-        
+
         if mean_enabled and max_mean_rel_error is None:
             raise forms.ValidationError(
                 "Ha az átlag statisztika engedélyezve van, meg kell adni a maximális relatív hibát!"
@@ -137,7 +140,7 @@ class ColumnPolicyForm(forms.ModelForm):
 
         is_generalize = masking_strategy is not None and masking_strategy.anon_function.name.startswith("generalize_")
         is_analytics = environment == ColumnPolicy.EnvironmentTypes.STAGING and role == ColumnPolicy.UserTypes.ANALYTICS
-        
+
         if is_generalize and not is_analytics:
             raise forms.ValidationError(
                 "A generalize_* stratégia csak STAGING környezeten és ANALYTICS szerepkörön engedélyezett!"
@@ -146,6 +149,21 @@ class ColumnPolicyForm(forms.ModelForm):
         if k_anonymity_enabled and environment != ColumnPolicy.EnvironmentTypes.DEVELOPMENT and not is_analytics:
             raise forms.ValidationError(
                 "A k-anonimitás csak DEVELOPMENT környezeten, vagy STAGING környezeten ANALYTICS szerepkörrel engedélyezett!"
+            )
+
+        schema = cleaned_data.get("schema_name")
+        table = cleaned_data.get("table_name")
+        column = cleaned_data.get("column_name")
+
+        prod_dsn = os.getenv("PRODUCTION_DSN")
+        if not prod_dsn:
+            raise forms.ValidationError("Hiányzik a PRODUCTION_DSN környezeti változó!")
+
+        metadata = PolicyService().get_column_metadata(prod_dsn)
+
+        if (schema, table, column) not in metadata:
+            raise forms.ValidationError(
+                f"A '{schema}.{table}.{column}' oszlop nem található az adatbázisban!"
             )
 
         return cleaned_data
@@ -184,7 +202,10 @@ class ColumnPolicyForm(forms.ModelForm):
                     else None,
                 },
             },
-            "k_anonymity": {"enabled": self.cleaned_data.get("k_anonymity"), "min_k": self.cleaned_data.get("k_anonymity_value") or 5},
+            "k_anonymity": {
+                "enabled": self.cleaned_data.get("k_anonymity"),
+                "min_k": self.cleaned_data.get("k_anonymity_value") or 5,
+            },
         }
 
         if commit:

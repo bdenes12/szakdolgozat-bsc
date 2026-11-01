@@ -1,8 +1,11 @@
+from unittest.mock import patch
+
 import pytest
 
 from policies.anon_functions import ANON_FUNCTIONS
 from policies.forms import ColumnPolicyForm, MaskingStrategyForm
 from policies.models import AnonFunction
+from policies.services import PolicyService
 
 STRATEGY_CASES = [
     ("noise", "[0.15]", True),
@@ -21,6 +24,13 @@ ROLE_CASES = [
     ("STAGING", "", False),
 ]
 
+COLUMN_CASES = [
+    ("patients", "email", True),
+    ("patients", "city", False),
+    ("patient_addresses", "city", True),
+    ("nincs_ilyen", "email", False),
+]
+
 
 def _anon_function(name):
     return AnonFunction.objects.create(
@@ -34,12 +44,12 @@ def _strategy_form(function, parameters):
     )
 
 
-def _policy_form(environment, role):
+def _policy_form(environment, role, table, column):
     return ColumnPolicyForm(
         data={
             "schema_name": "public",
-            "table_name": "patients",
-            "column_name": "email",
+            "table_name": table,
+            "column_name": column,
             "target_environment": environment,
             "masking_policy": role,
             "is_active": True,
@@ -58,7 +68,32 @@ def test_masking_strategy_form_validation(function_name, parameters, is_valid):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("environment, role, is_valid", ROLE_CASES)
-def test_column_policy_form_validation(environment, role, is_valid):
-    form = _policy_form(environment, role)
+def test_column_policy_form_validation(environment, role, is_valid, monkeypatch):
+    monkeypatch.setenv("PRODUCTION_DSN", "x")
+    form = _policy_form(environment, role, "patients", "email")
 
-    assert form.is_valid() == is_valid
+    with (
+        patch.object(
+            PolicyService,
+            "get_column_metadata",
+            return_value={("public", "patients", "email"): {"data_type": "text", "is_pk": False, "is_fk": False}},
+        )
+    ):
+        assert form.is_valid() == is_valid
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("table, column, is_valid", COLUMN_CASES)
+def test_column_policy_form_column_exists(table, column, is_valid, monkeypatch):
+    monkeypatch.setenv("PRODUCTION_DSN", "x")
+    form = _policy_form("DEVELOPMENT", "", table, column)
+
+    with patch.object(
+        PolicyService,
+        "get_column_metadata",
+        return_value={
+            ("public", "patients", "email"): {"data_type": "text", "is_pk": False, "is_fk": False},
+            ("public", "patient_addresses", "city"): {"data_type": "text", "is_pk": False, "is_fk": False},
+        },
+    ):
+        assert form.is_valid() == is_valid

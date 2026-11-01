@@ -9,6 +9,8 @@ from validations.services import ValidationService
 from .dlt_adapter import prod_to_staging, staging_to_dev
 from .models import PipelineRun
 
+logger = setup_logger("pipelines", console=False)
+
 
 class PipelineService:
     def __init__(
@@ -24,17 +26,15 @@ class PipelineService:
         self.validation_service = validation_service or ValidationService()
 
     def start_pipeline(self):
-        logger = setup_logger("pipelines", console=False)
+        pipeline_run = PipelineRun.objects.create(status=PipelineRun.RunStatuses.RUNNING)
 
-        pipeline_obj = PipelineRun.objects.create(status=PipelineRun.RunStatuses.RUNNING)
-
-        logger.info(f"Pipeline futás elindult - pipeline_id: {pipeline_obj.id}")
+        logger.info(f"Pipeline futás elindult - pipeline_id: {pipeline_run.id}")
         step = "Indítás"
 
         try:
             step = "PROD -> STAGING"
             self.transfer_to_staging()
-            logger.info(f"A PROD adatok STAGING-ba történő áttöltése kész - pipeline_id: {pipeline_obj.id}")
+            logger.info(f"A PROD adatok STAGING-ba történő áttöltése kész - pipeline_id: {pipeline_run.id}")
 
             step = "Anonimizálás"
             logger.info("Anonimizálás elindult")
@@ -43,32 +43,32 @@ class PipelineService:
 
             step = "STAGING -> DEV"
             self.transfer_to_dev()
-            logger.info(f"A maszkolt adatok STAGING -> DEV áttöltése kész - pipeline_id: {pipeline_obj.id}")
+            logger.info(f"A maszkolt adatok STAGING -> DEV áttöltése kész - pipeline_id: {pipeline_run.id}")
 
             step = "Validáció"
-            self.validation_service.run_validation(pipeline_obj)
+            self.validation_service.run_validation(pipeline_run)
 
-            pipeline_obj.mark_completed()
-            logger.info(f"Pipeline futás kész - pipeline_id: {pipeline_obj.id}")
+            pipeline_run.mark_completed()
+            logger.info(f"Pipeline futás kész - pipeline_id: {pipeline_run.id}")
 
-            return pipeline_obj
+            return pipeline_run
 
         except (psycopg2.OperationalError, SQLAlchemyOperationalError):
-            logger.error(f"Adatbázis nem érhető el - pipeline_id: {pipeline_obj.id}, lépés: {step}")
-            pipeline_obj.mark_failed(f"Adatbázis nem érhető el ({step})")
+            logger.error(f"Adatbázis nem érhető el - pipeline_id: {pipeline_run.id}, lépés: {step}")
+            pipeline_run.mark_failed(f"Adatbázis nem érhető el ({step})")
 
-            return pipeline_obj
+            return pipeline_run
 
         except PipelineStepFailed:
-            logger.error(f"Sikertelen áttöltés - pipeline_id: {pipeline_obj.id}, lépés: {step}")
-            pipeline_obj.mark_failed(f"Sikertelen áttöltés ({step})")
+            logger.error(f"Sikertelen áttöltés - pipeline_id: {pipeline_run.id}, lépés: {step}")
+            pipeline_run.mark_failed(f"Sikertelen áttöltés ({step})")
 
-            return pipeline_obj
+            return pipeline_run
 
         except Exception as e:
             logger.error(
-                f"Pipeline futás sikertelen - pipeline_id: {pipeline_obj.id}, lépés: {step}, hiba típusa: {type(e).__name__}"
+                f"Pipeline futás sikertelen - pipeline_id: {pipeline_run.id}, lépés: {step}, hiba típusa: {type(e).__name__}"
             )
-            pipeline_obj.mark_failed(err_message=f"Sikertelen lépés: {step}")
+            pipeline_run.mark_failed(err_message=f"Sikertelen lépés: {step}")
 
-            return pipeline_obj
+            return pipeline_run

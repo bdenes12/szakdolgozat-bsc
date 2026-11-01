@@ -23,6 +23,8 @@ from validations.checks import (
 from validations.labels import METRIC_LABELS
 from validations.models import ValidationReport, ValidationResult, ValidationRun
 
+logger = setup_logger("validations", console=False)
+
 
 class ValidationService:
     def __init__(self, checks=None, policy_service=None, alert_service=None):
@@ -31,9 +33,7 @@ class ValidationService:
         self.alert_service = alert_service or AlertService()
 
     def run_validation(self, pipeline_run: PipelineRun):
-        logger = setup_logger("validations", console=False)
-
-        validation_run_obj = ValidationRun.objects.create(
+        validation_run = ValidationRun.objects.create(
             pipeline_run=pipeline_run, status=ValidationRun.ValidationRunStatuses.RUNNING
         )
 
@@ -46,37 +46,37 @@ class ValidationService:
             )
 
             with transaction.atomic():
-                save_results = self.save_results(validation_run_obj, check_results)
+                save_results = self.save_results(validation_run, check_results)
 
                 fail_count = sum(1 for r in save_results if r.status == "FAIL")
                 logger.info(f"Checkek kész: {len(save_results)} eredmény, {fail_count} FAIL")
 
-                self.alert_service.create_alerts(validation_run_obj, save_results)
+                self.alert_service.create_alerts(validation_run, save_results)
 
-                self.alert_service.create_missing_policy_alerts(validation_run_obj, missing_policies, environment)
+                self.alert_service.create_missing_policy_alerts(validation_run, missing_policies, environment)
 
                 if missing_policies:
                     logger.warning(f"Hiányzó policy: {len(missing_policies)} oszlop")
 
-                self.generate_report(validation_run_obj)
-                logger.info(f"HTML riport mentve - validation_run_id: {validation_run_obj.id}")
+                self.generate_report(validation_run)
+                logger.info(f"HTML riport mentve - validation_run_id: {validation_run.id}")
 
-                validation_run_obj.mark_completed()
+                validation_run.mark_completed()
                 logger.info(f"Validáció futás kész - pipeline_id: {pipeline_run.id}")
 
         except (psycopg2.OperationalError, SQLAlchemyOperationalError):
-            logger.error(f"Adatbázis nem érhető el - pipeline_id: {validation_run_obj.pipeline_run.id}")
-            validation_run_obj.mark_failed(err_message="Adatbázis nem érhető el")
+            logger.error(f"Adatbázis nem érhető el - pipeline_id: {validation_run.pipeline_run.id}")
+            validation_run.mark_failed(err_message="Adatbázis nem érhető el")
             raise
 
         except Exception as e:
             logger.error(
                 f"Validáció futás sikertelen - pipeline_id: {pipeline_run.id}, hiba típusa: {type(e).__name__}"
             )
-            validation_run_obj.mark_failed(err_message="Validáció sikertelen")
+            validation_run.mark_failed(err_message="Validáció sikertelen")
             raise
 
-        return validation_run_obj
+        return validation_run
 
     def _default_checks(self):
         prod_dsn = os.getenv("PRODUCTION_DSN")
@@ -91,15 +91,35 @@ class ValidationService:
 
         policies = self.policy_service.get_active_policies(ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
 
-        analytics_policies = self.policy_service.get_active_policies(ColumnPolicy.EnvironmentTypes.STAGING).filter(masking_policy=ColumnPolicy.UserTypes.ANALYTICS)
+        analytics_policies = self.policy_service.get_active_policies(ColumnPolicy.EnvironmentTypes.STAGING).filter(
+            masking_policy=ColumnPolicy.UserTypes.ANALYTICS
+        )
 
         checks = [
             RowCountCheck(prod_dsn, staging_dsn, dev_dsn, policies),
             ColumnTypeCheck(prod_dsn, staging_dsn, dev_dsn, policies),
             ValueOverlapCheck(prod_dsn, staging_dsn, dev_dsn, policies),
             StatisticalQualityCheck(prod_dsn, staging_dsn, dev_dsn, policies),
-            KAnonymityCheck(prod_dsn, staging_dsn, dev_dsn, policies, dev_dsn, "public", "dev", ValidationResult.ValidationResultStatuses.WARNING),
-            KAnonymityCheck(prod_dsn, staging_dsn, dev_dsn, analytics_policies, analyst_staging_dsn, "analytics", "analytics", ValidationResult.ValidationResultStatuses.FAIL),
+            KAnonymityCheck(
+                prod_dsn,
+                staging_dsn,
+                dev_dsn,
+                policies,
+                dev_dsn,
+                "public",
+                "dev",
+                ValidationResult.ValidationResultStatuses.WARNING,
+            ),
+            KAnonymityCheck(
+                prod_dsn,
+                staging_dsn,
+                dev_dsn,
+                analytics_policies,
+                analyst_staging_dsn,
+                "analytics",
+                "analytics",
+                ValidationResult.ValidationResultStatuses.FAIL,
+            ),
         ]
 
         return checks
@@ -114,10 +134,10 @@ class ValidationService:
         return results
 
     def save_results(self, validation_run: ValidationRun, check_results):
-        validationresults = []
+        validation_results = []
 
         for result in check_results:
-            validationresult_obj = ValidationResult.objects.create(
+            validation_result = ValidationResult.objects.create(
                 validation_run=validation_run,
                 column_policy=result["column_policy"],
                 schema_name=result["schema_name"],
@@ -130,16 +150,16 @@ class ValidationService:
                 message=result["message"],
             )
 
-            validationresults.append(validationresult_obj)
+            validation_results.append(validation_result)
 
-        return validationresults
+        return validation_results
 
     def risk_level(self, results, schema, table):
         if ValidationResult.objects.filter(
             validation_run=results[0].validation_run,
             schema_name=schema,
             table_name=table,
-            check_type=ValidationResult.CheckTypes.VALUE_OVERLAP or ValidationResult.CheckTypes.K_ANONYMITY,
+            check_type__in=[ValidationResult.CheckTypes.VALUE_OVERLAP, ValidationResult.CheckTypes.K_ANONYMITY],
             status=ValidationResult.ValidationResultStatuses.FAIL,
         ).exists():
             return "MAGAS"

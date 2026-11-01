@@ -4,15 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('policies', '0011_alter_columnpolicy_options_and_more'),
+        ("policies", "0011_alter_columnpolicy_options_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='columnpolicy',
-            name='masking_policy',
-            field=models.CharField(blank=True, choices=[('SUPPORT', 'Support'), ('ANALYTICS', 'Analytics')], default='', max_length=50, verbose_name='Maszkolt szerepkör'),
+            model_name="columnpolicy",
+            name="masking_policy",
+            field=models.CharField(
+                blank=True,
+                choices=[("SUPPORT", "Support"), ("ANALYTICS", "Analytics")],
+                default="",
+                max_length=50,
+                verbose_name="Maszkolt szerepkör",
+            ),
         ),
     ]

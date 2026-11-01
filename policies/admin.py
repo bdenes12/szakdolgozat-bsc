@@ -25,7 +25,7 @@ def activate(modeladmin, request, queryset):
 
 
 @admin.action(description="Policy deaktiválása")
-def deactive(modeladmin, request, queryset):
+def deactivate(modeladmin, request, queryset):
     queryset.update(is_active=False)
 
 
@@ -53,7 +53,7 @@ class ColumnPolicyAdmin(ExtraButtonsMixin, admin.ModelAdmin):
         ("statistical_entropy", "max_entropy_rel_error"),
         ("k_anonymity", "k_anonymity_value"),
     ]
-    actions = [activate, deactive]
+    actions = [activate, deactivate]
 
     @button(html_attrs={"style": "background-color: #417690; color: white;"})
     def generate_suggestion(self, request):

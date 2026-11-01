@@ -375,7 +375,7 @@ class StatisticalQualityCheck(BaseCheck):
 
         return {"prod_histogram": prod_counts.tolist(), "dev_histogram": dev_counts.tolist(), "labels": labels}
 
-    def compare_means(self, prod_values, dev_values):
+    def _compare_means(self, prod_values, dev_values):
         np_prod_values = np.array(prod_values)
         np_dev_values = np.array(dev_values)
 
@@ -394,7 +394,7 @@ class StatisticalQualityCheck(BaseCheck):
 
         return {"prod_mean": prod_mean, "dev_mean": dev_mean, "mean_rel_error": mean_rel_error}
 
-    def compare_standard_deviations(self, prod_values, dev_values):
+    def _compare_standard_deviations(self, prod_values, dev_values):
         np_prod_values = np.array(prod_values)
         np_dev_values = np.array(dev_values)
 
@@ -412,7 +412,7 @@ class StatisticalQualityCheck(BaseCheck):
 
         return {"prod_std": prod_std, "dev_std": dev_std, "std_rel_error": std_rel_error}
 
-    def compare_distributions(self, prod_values, dev_values):
+    def _compare_distributions(self, prod_values, dev_values):
         if len(prod_values) < 2 or len(dev_values) < 2:
             ks_statistic = None
             ks_pvalue = None
@@ -424,7 +424,7 @@ class StatisticalQualityCheck(BaseCheck):
 
         return {"ks_statistic": ks_statistic, "ks_pvalue": ks_pvalue}
 
-    def calculate_entropy(self, value_counts):
+    def _calculate_entropy(self, value_counts):
         if not value_counts:
             return 0.0
 
@@ -481,7 +481,7 @@ class StatisticalQualityCheck(BaseCheck):
                 applied_thresholds["max_mean_rel_error"] = max_mean_rel_error
 
                 if prod and dev:
-                    mean = self.compare_means(prod, dev)
+                    mean = self._compare_means(prod, dev)
                     mean_rel_error = mean["mean_rel_error"]
                     if mean_rel_error is not None:
                         metrics.update(mean)
@@ -493,7 +493,7 @@ class StatisticalQualityCheck(BaseCheck):
                 applied_thresholds["max_std_rel_error"] = max_std_rel_error
 
                 if prod and dev:
-                    std = self.compare_standard_deviations(prod, dev)
+                    std = self._compare_standard_deviations(prod, dev)
                     std_rel_error = std["std_rel_error"]
                     if std_rel_error is not None:
                         metrics.update(std)
@@ -508,7 +508,7 @@ class StatisticalQualityCheck(BaseCheck):
                 applied_thresholds["min_pvalue"] = min_pvalue
 
                 if len(prod) >= 2 and len(dev) >= 2:
-                    distributions = self.compare_distributions(prod, dev)
+                    distributions = self._compare_distributions(prod, dev)
                     ks_statistic = distributions["ks_statistic"]
                     ks_pvalue = distributions["ks_pvalue"]
 
@@ -521,10 +521,10 @@ class StatisticalQualityCheck(BaseCheck):
 
             if entropy_enabled:
                 prod_counts = self._value_counts(self.prod_dsn, schema, table, column)
-                prod_entropy = self.calculate_entropy(prod_counts)
+                prod_entropy = self._calculate_entropy(prod_counts)
 
                 dev_counts = self._value_counts(self.dev_dsn, schema, table, column)
-                dev_entropy = self.calculate_entropy(dev_counts)
+                dev_entropy = self._calculate_entropy(dev_counts)
 
                 max_entropy_rel_error = self._threshold(spec.get("entropy"), "max_rel_error", 0.40)
                 applied_thresholds["max_entropy_rel_error"] = max_entropy_rel_error
@@ -628,7 +628,7 @@ class KAnonymityCheck(BaseCheck):
                         sql.SQL(
                             "SELECT {column_names}, COUNT(*) AS size FROM {schema}.{table_name} GROUP BY {column_names} ORDER BY size"
                         ).format(
-                            column_names = sql.SQL(", ").join(sql_columns),
+                            column_names=sql.SQL(", ").join(sql_columns),
                             schema=sql.Identifier(schema),
                             table_name=sql.Identifier(table),
                         )
@@ -714,7 +714,7 @@ class KAnonymityCheck(BaseCheck):
                         "below_k_ratio": target_k_metrics["below_k_ratio"],
                     },
                     "column_policy": None,
-                    "message": message
+                    "message": message,
                 }
             )
 

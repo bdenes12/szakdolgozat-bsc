@@ -11,11 +11,11 @@ from policies.services import PolicyService
 logger = setup_logger("anonymization", console=False)
 
 
-def build_mask_expression(policy_obj: ColumnPolicy):
-    column_name = policy_obj.column_name
-    parameters_list = policy_obj.masking_strategy.parameters
-    anon_function = policy_obj.masking_strategy.anon_function.function
-    is_column_name_parameter = policy_obj.masking_strategy.anon_function.is_column_name_parameter
+def build_mask_expression(policy: ColumnPolicy):
+    column_name = policy.column_name
+    parameters_list = policy.masking_strategy.parameters
+    anon_function = policy.masking_strategy.anon_function.function
+    is_column_name_parameter = policy.masking_strategy.anon_function.is_column_name_parameter
 
     if not anon_function or "." not in anon_function:
         raise ValueError(f"Hibás AnonFunction.function: {anon_function}")
@@ -27,7 +27,7 @@ def build_mask_expression(policy_obj: ColumnPolicy):
 
     anon_func_args = []
     if is_column_name_parameter:
-        mark_exp = sql.SQL("{}.{}({})").format(schema, name, sql.Identifier(column_name))
+        mask_exp = sql.SQL("{}.{}({})").format(schema, name, sql.Identifier(column_name))
 
         anon_func_args.append(sql.Identifier(column_name))
 
@@ -35,18 +35,18 @@ def build_mask_expression(policy_obj: ColumnPolicy):
             for parameter in parameters_list:
                 anon_func_args.append(sql.Literal(parameter))
 
-            mark_exp = sql.SQL("{}.{}({})").format(schema, name, sql.SQL(", ").join(anon_func_args))
+            mask_exp = sql.SQL("{}.{}({})").format(schema, name, sql.SQL(", ").join(anon_func_args))
 
     elif not is_column_name_parameter and parameters_list:
         for parameter in parameters_list:
             anon_func_args.append(sql.Literal(parameter))
 
-        mark_exp = sql.SQL("{}.{}({})").format(schema, name, sql.SQL(", ").join(anon_func_args))
+        mask_exp = sql.SQL("{}.{}({})").format(schema, name, sql.SQL(", ").join(anon_func_args))
 
     else:
-        mark_exp = sql.SQL("{}.{}()").format(schema, name)
+        mask_exp = sql.SQL("{}.{}()").format(schema, name)
 
-    return mark_exp
+    return mask_exp
 
 
 def apply_staging_labels():
@@ -151,27 +151,27 @@ def apply_policies():
         conn_staging = psycopg2.connect(dsn_staging)
 
         with conn_staging:
-            with conn_staging.cursor() as cur_staging:
+            with conn_staging.cursor() as cur:
                 for table_name, policy in groupby(active_policies, key=lambda x: x.table_name):
                     active_policies_by_tables[table_name] = list(policy)
 
-                cur_staging.execute(
+                cur.execute(
                     sql.SQL(
                         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name NOT LIKE '_dlt_%'"
                     )
                 )
-                table_names = [row[0] for row in cur_staging.fetchall()]
+                table_names = [row[0] for row in cur.fetchall()]
 
                 for table_name in table_names:
                     policies = active_policies_by_tables.get(table_name, [])
 
-                    cur_staging.execute(
+                    cur.execute(
                         sql.SQL(
                             "SELECT column_name FROM information_schema.columns WHERE table_name = {table_name} AND table_schema = 'public' "
                         ).format(table_name=sql.Literal(table_name))
                     )
 
-                    columns = [sql.Identifier(row[0]) for row in cur_staging.fetchall()]
+                    columns = [sql.Identifier(row[0]) for row in cur.fetchall()]
 
                     for policy in policies:
                         if policy.masking_strategy is None:
@@ -184,13 +184,13 @@ def apply_policies():
                             columns[index] = sql.SQL("{} AS {}").format(mask_exp, sql.Identifier(policy.column_name))
                             applied += 1
 
-                    cur_staging.execute(
+                    cur.execute(
                         sql.SQL("DROP VIEW IF EXISTS dev_export.{table_name}").format(
                             table_name=sql.Identifier(table_name)
                         )
                     )
 
-                    cur_staging.execute(
+                    cur.execute(
                         sql.SQL(
                             "CREATE OR REPLACE VIEW dev_export.{table_name} AS SELECT {} FROM public.{table_name}"
                         ).format(
@@ -225,14 +225,12 @@ def apply_analytics_views():
         conn_staging = psycopg2.connect(dsn_staging)
 
         with conn_staging:
-            with conn_staging.cursor() as cur_staging:
-                cur_staging.execute(
-                    sql.SQL("SELECT schemaname, matviewname FROM pg_matviews WHERE schemaname = 'analytics' ")
-                )
-                matviews = cur_staging.fetchall()
+            with conn_staging.cursor() as cur:
+                cur.execute(sql.SQL("SELECT schemaname, matviewname FROM pg_matviews WHERE schemaname = 'analytics' "))
+                matviews = cur.fetchall()
 
                 for matview in matviews:
-                    cur_staging.execute(
+                    cur.execute(
                         sql.SQL("DROP MATERIALIZED VIEW IF EXISTS {schemaname}.{matviewname}").format(
                             schemaname=sql.Identifier(matview[0]), matviewname=sql.Identifier(matview[1])
                         )
@@ -241,27 +239,28 @@ def apply_analytics_views():
                 for table_name, policy in groupby(active_staging_analytics_policies, key=lambda x: x.table_name):
                     active_staging_analytics_policies_by_tables[table_name] = list(policy)
 
-                column_cnt = 0
-                view_cnt = 0
+                column_count = 0
+                view_count = 0
                 for table_name, policies in active_staging_analytics_policies_by_tables.items():
                     columns = []
                     for policy in policies:
                         if policy.masking_strategy is not None:
                             mask_exp = build_mask_expression(policy)
                             columns.append(sql.SQL("{} AS {}").format(mask_exp, sql.Identifier(policy.column_name)))
-                            column_cnt += 1
-                        
+                            column_count += 1
+
                         else:
                             columns.append(sql.Identifier(policy.column_name))
-                            column_cnt += 1
+                            column_count += 1
 
-                    cur_staging.execute(sql.SQL("CREATE MATERIALIZED VIEW analytics.{table_name} AS SELECT {} FROM public.{table_name}").format(
-                        sql.SQL(", ").join(columns),
-                        table_name=sql.Identifier(table_name)
-                    ))
-                    view_cnt += 1
+                    cur.execute(
+                        sql.SQL(
+                            "CREATE MATERIALIZED VIEW analytics.{table_name} AS SELECT {} FROM public.{table_name}"
+                        ).format(sql.SQL(", ").join(columns), table_name=sql.Identifier(table_name))
+                    )
+                    view_count += 1
 
-                logger.info(f"ANALYTICS nézetek: {view_cnt} materialized view és {column_cnt} oszlop jött létre")
+                logger.info(f"ANALYTICS nézetek: {view_count} materialized view és {column_count} oszlop jött létre")
 
     finally:
         if conn_staging:

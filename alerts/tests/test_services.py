@@ -70,6 +70,7 @@ def test_create_missing_policy_alerts():
     assert alert.severity == Alert.SeverityType.INFO
     assert alert.column_name == "phone"
 
+
 @pytest.mark.django_db
 @pytest.mark.parametrize("status, expected_count", K_ANONYMITY_STATUS_CASES)
 def test_create_alerts_k_anonymity_only_on_fail(status, expected_count):

@@ -117,7 +117,7 @@ def test_generate_suggestions_creates_fuzzy_match(monkeypatch):
             PolicyService, "find_missing_policies", return_value=("DEVELOPMENT", [("public", "patients", "emial")])
         ),
         patch.object(
-            SuggestionService,
+            PolicyService,
             "get_column_metadata",
             return_value={("public", "patients", "emial"): {"data_type": "text", "is_pk": False, "is_fk": False}},
         ),
@@ -143,7 +143,7 @@ def test_generate_suggestions_skips_existing(monkeypatch):
             PolicyService, "find_missing_policies", return_value=("DEVELOPMENT", [("public", "patients", "emial")])
         ),
         patch.object(
-            SuggestionService,
+            PolicyService,
             "get_column_metadata",
             return_value={("public", "patients", "emial"): {"data_type": "text", "is_pk": False, "is_fk": False}},
         ),

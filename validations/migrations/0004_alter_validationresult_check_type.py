@@ -4,15 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('validations', '0003_validationreport'),
+        ("validations", "0003_validationreport"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='validationresult',
-            name='check_type',
-            field=models.CharField(choices=[('ROW_COUNT', 'Row_count'), ('COLUMN_TYPE', 'Column_type'), ('VALUE_OVERLAP', 'Value_overlap'), ('STATISTICAL', 'Statistical'), ('K_ANONYMITY', 'K_anonymity')], max_length=250),
+            model_name="validationresult",
+            name="check_type",
+            field=models.CharField(
+                choices=[
+                    ("ROW_COUNT", "Row_count"),
+                    ("COLUMN_TYPE", "Column_type"),
+                    ("VALUE_OVERLAP", "Value_overlap"),
+                    ("STATISTICAL", "Statistical"),
+                    ("K_ANONYMITY", "K_anonymity"),
+                ],
+                max_length=250,
+            ),
         ),
     ]

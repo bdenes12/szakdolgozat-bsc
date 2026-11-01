@@ -14,6 +14,52 @@ class PolicyService:
             "masking_strategy", "data_category"
         )
 
+    def get_column_metadata(self, prod_dsn):
+        conn_prod = None
+
+        column_metadata = {}
+
+        try:
+            conn_prod = psycopg2.connect(prod_dsn)
+
+            with conn_prod:
+                with conn_prod.cursor() as cur:
+                    cur.execute(
+                        sql.SQL(
+                            "SELECT table_schema, table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' "
+                        )
+                    )
+                    column_metadata = {
+                        (row[0], row[1], row[2]): {"data_type": row[3], "is_pk": False, "is_fk": False}
+                        for row in cur.fetchall()
+                    }
+
+                    cur.execute(
+                        sql.SQL(
+                            "SELECT kcu.table_schema, kcu.table_name, kcu.column_name, tc.constraint_type "
+                            "FROM information_schema.table_constraints tc "
+                            "JOIN information_schema.key_column_usage kcu "
+                            "ON tc.constraint_name = kcu.constraint_name "
+                            "AND tc.table_schema = kcu.table_schema "
+                            "WHERE tc.table_schema = 'public' "
+                            "AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY')"
+                        )
+                    )
+
+                    for row in cur.fetchall():
+                        key = (row[0], row[1], row[2])
+
+                        if row[3] == "PRIMARY KEY":
+                            column_metadata[key]["is_pk"] = True
+                        else:
+                            column_metadata[key]["is_fk"] = True
+
+        finally:
+            if conn_prod:
+                conn_prod.close()
+
+        return column_metadata
+
     def find_missing_policies(self, prod_dsn, environment):
         conn_prod = None
 
@@ -64,52 +110,6 @@ class PolicyService:
 
 
 class SuggestionService:
-    def get_column_metadata(self, prod_dsn):
-        conn_prod = None
-
-        column_metadata = {}
-
-        try:
-            conn_prod = psycopg2.connect(prod_dsn)
-
-            with conn_prod:
-                with conn_prod.cursor() as cur:
-                    cur.execute(
-                        sql.SQL(
-                            "SELECT table_schema, table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' "
-                        )
-                    )
-                    column_metadata = {
-                        (row[0], row[1], row[2]): {"data_type": row[3], "is_pk": False, "is_fk": False}
-                        for row in cur.fetchall()
-                    }
-
-                    cur.execute(
-                        sql.SQL(
-                            "SELECT kcu.table_schema, kcu.table_name, kcu.column_name, tc.constraint_type "
-                            "FROM information_schema.table_constraints tc "
-                            "JOIN information_schema.key_column_usage kcu "
-                            "ON tc.constraint_name = kcu.constraint_name "
-                            "AND tc.table_schema = kcu.table_schema "
-                            "WHERE tc.table_schema = 'public' "
-                            "AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY')"
-                        )
-                    )
-
-                    for row in cur.fetchall():
-                        key = (row[0], row[1], row[2])
-
-                        if row[3] == "PRIMARY KEY":
-                            column_metadata[key]["is_pk"] = True
-                        else:
-                            column_metadata[key]["is_fk"] = True
-
-        finally:
-            if conn_prod:
-                conn_prod.close()
-
-        return column_metadata
-
     def suggest_for_column(self, column_name, data_type, is_pk, is_fk):
         if is_pk:
             suggest = ("TECHNICAL", None, [], "pk")
@@ -158,7 +158,7 @@ class SuggestionService:
 
         _, missing = PolicyService().find_missing_policies(prod_dsn, ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
 
-        metadata = self.get_column_metadata(prod_dsn)
+        metadata = PolicyService().get_column_metadata(prod_dsn)
 
         existing = set(PolicySuggestion.objects.values_list("schema_name", "table_name", "column_name"))
 
