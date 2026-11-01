@@ -61,7 +61,7 @@
                                 <td class="cell-nowrap">{{ result.status }}</td>
                                 <td class="cell-metrics">
                                     {% for key, value in result.metrics.items %}
-                                        {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" %}
+                                        {% if key != "labels" and key != "prod_histogram" and key != "dev_histogram" and key != "class_size_labels" and key != "prod_class_size_hist" and key != "target_class_size_hist" %}
                                             <div><strong>{{ key|translate_key:labels }}:</strong> {{ value|round_value }}</div>
                                         {% endif %}
                                     {% empty %}
@@ -87,6 +87,15 @@
                         <div class="chart-panel">
                             <h3>Hisztogram: {{ result.column_name }} — eloszlás (prod vs dev)</h3>
                             <canvas id="hist-{{ result.id }}"></canvas>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                {% for result in table.results %}
+                    {% if result.metrics.prod_class_size_hist %}
+                        <div class="chart-panel">
+                            <h3>K-anonimitás: {{ result.column_name }} — {{ result.metrics.target }}</h3>
+                            <canvas id="kanon-{{ result.id }}"></canvas>
                         </div>
                     {% endif %}
                 {% endfor %}
@@ -174,6 +183,40 @@
                                 }
                             })
                         {% endif %}
+
+                        {% if result.metrics.prod_class_size_hist %}
+
+                            const ctx_histogram_kanon_{{ result.id }} = document.getElementById("kanon-{{ result.id }}").getContext("2d");
+                            new Chart(ctx_histogram_kanon_{{ result.id }}, {
+                                type: 'bar',
+                                data: {
+                                    labels: {{ result.metrics.class_size_labels|safe }},
+                                    datasets: [
+                                        {
+                                            label: 'Prod',
+                                            data: {{ result.metrics.prod_class_size_hist|safe }},
+                                            backgroundColor: 'rgba(31, 41, 55, 0.5)',
+                                            borderColor: 'rgb(31, 41, 55)',
+                                            borderWidth: 1
+                                        },
+                                        {
+                                            label: '{{ result.metrics.target }}',
+                                            data: {{ result.metrics.target_class_size_hist|safe }},
+                                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                            borderColor: 'rgb(59, 130, 246)',
+                                            borderWidth: 1
+                                        }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: "bottom" } },
+                                    scales: { y: { beginAtZero: true } }
+                                }
+                            })
+                        {% endif %}
+
                     {% endfor %}
                 {% endfor %}
             })

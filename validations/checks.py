@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections import defaultdict
 
 import numpy as np
 import psycopg2
@@ -664,6 +663,19 @@ class KAnonymityCheck(BaseCheck):
 
         return result
 
+    def _class_size_hist(self, sizes, min_k):
+        if not sizes:
+            return None
+
+        number_1 = sum(size for size in sizes if size == 1)
+        number_mid = sum(size for size in sizes if 1 < size < min_k)
+        number_ok = sum(size for size in sizes if size >= min_k)
+
+        return {
+            "labels": ["1", f"2-{min_k - 1}", f"{min_k}+"],
+            "counts": [number_1, number_mid, number_ok],
+        }
+
     def execute(self):
         results = []
 
@@ -681,6 +693,9 @@ class KAnonymityCheck(BaseCheck):
 
             prod_k_metrics = self._k_metrics(prod_sizes, data["min_k"])
             target_k_metrics = self._k_metrics(target_sizes, data["min_k"])
+
+            prod_class_size_hist = self._class_size_hist(prod_sizes, data["min_k"])
+            target_class_size_hist = self._class_size_hist(target_sizes, data["min_k"])
 
             status = (
                 ValidationResult.ValidationResultStatuses.PASS
@@ -712,6 +727,9 @@ class KAnonymityCheck(BaseCheck):
                         "n_classes": target_k_metrics["n_classes"],
                         "unique_ratio": target_k_metrics["unique_ratio"],
                         "below_k_ratio": target_k_metrics["below_k_ratio"],
+                        "class_size_labels": prod_class_size_hist["labels"] if prod_class_size_hist else [], 
+                        "prod_class_size_hist": prod_class_size_hist["counts"] if prod_class_size_hist else [],
+                        "target_class_size_hist": target_class_size_hist["counts"] if target_class_size_hist else [],
                     },
                     "column_policy": None,
                     "message": message,

@@ -19,6 +19,12 @@ K_METRICS_CASES = [
     ([], 5, None),
 ]
 
+K_HIST_CASES = [
+    ([3, 2, 1, 4], 3, {"labels": ["1", "2-2", "3+"], "counts": [1, 2, 7]}),
+    ([10, 8, 6], 5, {"labels": ["1", "2-4", "5+"], "counts": [0, 0, 24]}),
+    ([], 5, None)
+]
+
 
 @pytest.mark.django_db
 def _category(overlap):
@@ -285,6 +291,11 @@ def test_value_overlap_disabled_skips_db():
 
     assert results == []
     mock_values.assert_not_called()
+
+
+@pytest.mark.parametrize("sizes, min_k, expected", K_HIST_CASES)
+def test_class_size_hist(sizes, min_k, expected):
+    assert _k_check([])._class_size_hist(sizes, min_k) == expected
 
 
 @pytest.mark.parametrize("sizes, min_k, expected", K_METRICS_CASES)
