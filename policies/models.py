@@ -1,10 +1,13 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
 class DataCategory(models.Model):
     name = models.CharField(max_length=250, unique=True)
     description = models.TextField(blank=True)
-    maximum_overlap = models.DecimalField(max_digits=5, decimal_places=2)
+    maximum_overlap = models.DecimalField(
+        max_digits=5, decimal_places=2, validators=[MinValueValidator(0.00), MaxValueValidator(100.00)]
+    )
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -38,16 +41,16 @@ class MaskingStrategy(models.Model):
 
 
 class ColumnPolicy(models.Model):
-    schema_name = models.CharField(max_length=250)
-    table_name = models.CharField(max_length=250)
-    column_name = models.CharField(max_length=250)
+    schema_name = models.CharField(max_length=250, verbose_name="Séma")
+    table_name = models.CharField(max_length=250, verbose_name="Tábla")
+    column_name = models.CharField(max_length=250, verbose_name="Oszlop")
 
     class EnvironmentTypes(models.TextChoices):
         STAGING = "STAGING", "Staging"
         DEVELOPMENT = "DEVELOPMENT", "Development"
 
     target_environment = models.CharField(
-        max_length=250, choices=EnvironmentTypes.choices, default=EnvironmentTypes.STAGING
+        max_length=250, choices=EnvironmentTypes.choices, default=EnvironmentTypes.STAGING, verbose_name="Célkörnyezet"
     )
 
     class UserTypes(models.TextChoices):
@@ -57,8 +60,12 @@ class ColumnPolicy(models.Model):
     masking_policy = models.CharField(
         max_length=50, choices=UserTypes.choices, blank=True, default="", verbose_name="Maszkolt szerepkör"
     )
-    data_category = models.ForeignKey(DataCategory, null=True, blank=True, on_delete=models.PROTECT)
-    masking_strategy = models.ForeignKey(MaskingStrategy, null=True, blank=True, on_delete=models.PROTECT)
+    data_category = models.ForeignKey(
+        DataCategory, null=True, blank=True, on_delete=models.PROTECT, verbose_name="Adatvédelmi kategória"
+    )
+    masking_strategy = models.ForeignKey(
+        MaskingStrategy, null=True, blank=True, on_delete=models.PROTECT, verbose_name="Maszkolási stratégia"
+    )
     quality_checks = models.JSONField(default=dict)
     is_active = models.BooleanField(default=True, verbose_name="Aktív")
 
@@ -76,23 +83,23 @@ class ColumnPolicy(models.Model):
 
 
 class PolicySuggestion(models.Model):
-    schema_name = models.CharField(max_length=250)
-    table_name = models.CharField(max_length=250)
-    column_name = models.CharField(max_length=250)
-    data_type = models.CharField(max_length=250, blank=True)
-    is_pk = models.BooleanField(default=False)
-    is_fk = models.BooleanField(default=False)
-    reason = models.CharField(max_length=250, blank=True)
-    suggested_category = models.ForeignKey(DataCategory, on_delete=models.PROTECT)
-    suggested_strategy = models.ForeignKey(MaskingStrategy, on_delete=models.SET_NULL, null=True, blank=True)
+    schema_name = models.CharField(max_length=250, verbose_name="Séma")
+    table_name = models.CharField(max_length=250, verbose_name="Tábla")
+    column_name = models.CharField(max_length=250, verbose_name="Oszlop")
+    data_type = models.CharField(max_length=250, blank=True, verbose_name="Adattípus")
+    is_pk = models.BooleanField(default=False, verbose_name="Elsődleges kulcs")
+    is_fk = models.BooleanField(default=False, verbose_name="Idegen kulcs")
+    reason = models.CharField(max_length=250, blank=True, verbose_name="Indoklás")
+    suggested_category = models.ForeignKey(DataCategory, on_delete=models.PROTECT, verbose_name="Javasolt adatvédelmi kategória")
+    suggested_strategy = models.ForeignKey(MaskingStrategy, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Javasolt maszkolási stratégia")
 
     class SuggestionStatus(models.TextChoices):
         PENDING = "PENDING", "Pending"
         ACCEPTED = "ACCEPTED", "Accepted"
         REJECTED = "REJECTED", "Rejected"
 
-    status = models.CharField(max_length=50, choices=SuggestionStatus.choices)
-    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=50, choices=SuggestionStatus.choices, verbose_name="Státusz")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Létrehozás ideje")
 
     class Meta:
         constraints = [

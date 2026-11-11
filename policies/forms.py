@@ -20,7 +20,7 @@ class ColumnPolicyForm(forms.ModelForm):
 
     statistical_mean = forms.BooleanField(required=False, initial=False, label="Átlag")
     statistical_std = forms.BooleanField(required=False, initial=False, label="Szórás")
-    statistical_ks = forms.BooleanField(required=False, initial=False, label="Kolmogorov-Smirnov (eloszlás)")
+    statistical_ks = forms.BooleanField(required=False, initial=False, label="Kolmogorov-Szmirnov (eloszlás)")
     statistical_entropy = forms.BooleanField(required=False, initial=False, label="Shannon-entrópia")
 
     k_anonymity = forms.BooleanField(required=False, initial=False, label="K-Anonimitás")

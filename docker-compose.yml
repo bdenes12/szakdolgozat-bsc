@@ -37,7 +37,7 @@ services:
       retries: 10
   
   staging_db:
-    image: registry.gitlab.com/dalibo/postgresql_anonymizer:stable
+    image: registry.gitlab.com/dalibo/postgresql_anonymizer:3.0.5
     command: ["postgres", "-c", "shared_preload_libraries=anon", "-c", "anon.masking_policies=support,analytics"]
     environment:
       - POSTGRES_USER=user_pg

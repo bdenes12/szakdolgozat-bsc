@@ -5,7 +5,14 @@ from .forms import ColumnPolicyForm, MaskingStrategyForm
 from .models import AnonFunction, ColumnPolicy, DataCategory, MaskingStrategy, PolicySuggestion
 from .services import SuggestionService
 
-admin.site.register(AnonFunction)
+
+@admin.register(AnonFunction)
+class AnonFunctionAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(DataCategory)

@@ -11,17 +11,26 @@
     <p>
         Az adatbázis oszlopok anonimizálása a
         <a href="{% url 'admin:policies_columnpolicy_changelist' %}">Column policies</a>
-        listában megadott szabályok szerint lép érvénybe.
-        A maszkolási függvények az
+        listában megadott szabályok szerint történik.
+        A beépítettmaszkolási függvények az
         <a href="{% url 'admin:policies_anonfunction_changelist' %}">Anon functions</a>
         alatt előre definiáltak. A
         <a href="{% url 'admin:policies_maskingstrategy_changelist' %}">Masking strategies</a>
         menüben létre tudunk hozni saját maszkolási stratégiát a kiválasztott maszkolási függvénnyel és, ha szükséges a megadott paraméterrel.
     </p>
     <ul>
-        <li>Oszlop szabály: séma, tábla, oszlop, célkörnyezet (DEVELOPMENT vagy STAGING), adatvédelmi kategória, maszkolási stratégia.</li>
-        <li>STAGING esetén ki kell választani a felhasználót (Support vagy Analytics), akire a dinamikus maszkolás érvényes.</li>
-        <li>Opcionális: statisztikai vizsgálat és értékátfedés-vizsgálat az oszlopon az alapértelmezett checkeken felül.</li>
+        <li>Oszlop szabály: séma, tábla, oszlop, célkörnyezet (DEVELOPMENT vagy STAGING), adatvédelmi kategória és maszkolási stratégia.</li>
+        <li>DEVELOPMENT célkörnyezet esetén nem kell szerepkört megadni; a devbe másoláskor az adatok statikus maszkot kapnak.</li>
+        <li>STAGING célkörnyezet esetén kötelező felhasználói szerepkört választani (SUPPORT vagy ANALYTICS):
+            <ul>
+                <li><strong>STAGING + SUPPORT:</strong> dinamikus maszkolás a public sémán (a <code>support_user</code> számára).</li>
+                <li><strong>STAGING + ANALYTICS:</strong> az <code>analytics</code> sémában lévő materialized view-kon keresztül olvashatja (az <code>analyst_user</code>); a <code>public</code> sémához nincs hozzáférése.</li>
+            </ul>
+        </li>
+        <li>Opcionális: K-anonimitás, statisztikai és értékátfedés-vizsgálat az oszlopon az alapértelmezett checkeken felül.</li>
+        <li>K-anonimitás csak DEVELOPMENT környezeten vagy STAGING + ANALYTICS szerepkörön kapcsolható be. Az alapértelmezett <code>min_k</code> érték 5; egy táblán belül a bekapcsolt k-anonimitású oszlopokat a rendszer együtt teszi a <code>GROUP BY</code> záradékba.</li>
+        <li>A <code>generalize_*</code> stratégia kizárólag STAGING környezeten és ANALYTICS szerepkörön engedélyezett.</li>
+        <li>A beállított séma/tábla/oszlopnak léteznie kell a production adatbázisban, különben a form elutasítja a mentést.</li>
         <li>TECHNICAL oszlopnál a maszkolási stratégia üresen maradhat - ezeket nem maszkoljuk.</li>
         <li>Javaslatok generálása: a Column policies admin menüponton a <strong>GENERATE SUGGESTION</strong> gomb. Elfogadás / elutasítás a Policy suggestions adminban.</li>
     </ul>
@@ -32,7 +41,16 @@
 </section>
 
 <section class="help-section">
-    <h2>2. Főoldal - ETL indítása</h2>
+    <h2>2. Szerepkörök</h2>
+    <ul>
+        <li>Support: operatív felhasználó, a staging <code>public</code> sémáját maszkolva látja.</li>
+        <li>Analytics: elemző, csak az <code>analytics</code> séma nézeteit olvashatja.</li>
+        <li>A k-anonimitás validáció az <code>STAGING_ANALYST_DSN</code> kapcsolaton (analyst) fut, nem a maszkolatlan staging admin felhasználón.</li>
+    </ul>
+</section>
+
+<section class="help-section">
+    <h2>3. Főoldal - ETL indítása</h2>
     <p>
         A <a href="{% url 'pipelines:pipeline-list' %}">főoldalon</a> az <strong>ETL indítása!</strong> gomb
         a production -> staging -> dev folyamatot elindítja, és érvényesíti a beállított szabályokat.
@@ -46,29 +64,32 @@
 </section>
 
 <section class="help-section">
-    <h2>3. Riport</h2>
-    <p>
-        A riport egy adott validációs futás mentett HTML pillanata.
-        Az eredmények táblánként csoportosítottak, minden táblához kockázati szint is tartozik
-        (MAGAS / KÖZEPES / ALACSONY / NINCS).
-    </p>
+    <h2>4. Riport</h2>
+    <ul>
+        <li>A riport egy adott futás eredményeinek statikus HTML mentése. Szabály- vagy kódváltás után új ETL kell a friss riporthoz.</li>
+        <li>Az eredmények táblánként csoportosítottak, minden táblához kockázati szint is tartozik (MAGAS / KÖZEPES / ALACSONY / NINCS).</li>
+        <li>A kockázat MAGAS, ha VALUE_OVERLAP vagy K_ANONYMITY validációs státusza FAIL.</li>
+        <li>A 'k' a legkisebb ekvivalenciaosztály mérete. Ha <code>k &lt; min_k</code>, DEVELOPMENT-en WARNING, ANALYTICS-en FAIL.</li>
+        <li>A diagram a sorok számát mutatja az <code>1</code> / <code>2…min_k−1</code> / <code>min_k+</code> vödrökben, production és célkörnyezet mellett.</li> 
+    </ul>
+
 </section>
 <section class="help-section">
-    <h2>4. Alertek</h2>
+    <h2>5. Alertek</h2>
     <p>
         A <a href="{% url 'alerts:alert-list' %}">Alertek</a> oldalon az összes nyitott riasztást láthatjuk.
         A <strong>RESOLVE</strong> gomb megoldottra állítja a kiválasztott alertet, ezután kikerül a listából.
     </p>
 </section>
 <section class="help-section">
-    <h2>5. Tesztek</h2>
+    <h2>6. Tesztek</h2>
     <p>
-        A logika és a webes nézetek: <code>pytest -q</code>.
-        A négy Postgres DSN és a teljes ETL folyamat nincs a pytestben, ezek manuálisan kerülnek ellenőrzésre.
+        A logika és a webes nézetek: <code>docker compose exec web pytest -q</code>.
+        A Postgres DSN-ek és a teljes ETL folyamat nincs a pytestben, ezek manuálisan kerülnek ellenőrzésre.
     </p>
 </section>
 <section class="help-section">
-    <h2>6. Hibaüzenetek</h2>
+    <h2>7. Hibaüzenetek</h2>
     <p>
         Lehetséges hibaüzenetek:
         <ul>

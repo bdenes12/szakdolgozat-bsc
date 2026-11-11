@@ -3,7 +3,7 @@
 {% block content %}
 
 <p class="dashboard-hint">
-    ETL előtt az <a href="{% url 'admin:policies_columnpolicy_changelist' %}">admin</a> felületen állítsd be az anonimizálási szabályokat
+    ETL előtt az <a href="{% url 'admin:policies_columnpolicy_changelist' %}">admin</a> felületen állítsa be az anonimizálási szabályokat
     (ColumnPolicy) és a minőségi küszöböket. Hiányzó szabály MISSING_POLICY riasztást ad.
 </p>
 <form class="dashboard-actions" action="." method="POST" onsubmit="document.getElementById('submit-btn').disabled = true; document.getElementById('submit-btn').innerText = 'Indítás folyamatban...';">{% csrf_token %}

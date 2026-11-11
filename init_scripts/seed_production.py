@@ -76,9 +76,12 @@ def generate_taj_number():
 
 
 def insert_patients(cur: psycopg2.extensions.cursor, patient_number):
+    taj_numbers = set()
+    while len(taj_numbers) < patient_number:
+        taj_numbers.add(generate_taj_number())
+
     patient_data = []
-    for _ in range(patient_number):
-        national_health_id = generate_taj_number()
+    for national_health_id in taj_numbers:
         patient_data.append(
             (
                 national_health_id,

@@ -1,7 +1,7 @@
 # Konfigurációvezérelt adatanonimizáció és automatizált validáció ETL folyamatokban
 
 A szakdolgozat célja egy olyan rendszer kialakítása, amely éles adatbázisból származó adatokat továbbít fejlesztői környezetbe úgy, hogy közben automatikusan elvégzi és ellenőrzi az érzékeny adatok anonimizálását. 
-A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A production adatbázisból az adatok a staging rétegbe kerülnek, ahol PostgreSQL Anonymizer segítségével, szerepkör-alapú (dinamikus) maszkolás történik. A dev adatbázisba ezután már statikusan anonimizált adatok kerülnek át.
+A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A production adatbázisból az adatok a staging rétegbe kerülnek, ahol PostgreSQL Anonymizer segítségével, szerepkör-alapú maszkolás történik. Staging környezeten két út van. Az egyik, hogy support felhasználóként a public séma tábláit olvassuk dinamikus maszkolással, A másik út az, hogy analytics felhasználóként az analytics séma materializált nézeteit olvassuk, amik statikusan vannak maszkolva. A dev adatbázisba ezután már statikusan anonimizált adatok kerülnek át.
 
 ## Követelmények
 
@@ -24,7 +24,7 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
     | `szigoru_stat` | szigorú statisztikai küszöbök, KÖZEPES kockázatú táblák |
     | `hianyos` | nincs szabály, csak MISSING_POLICY riasztások jönnek létre |
     | `staging` | az `alap` kiegészítve SUPPORT és ANALYTICS szerepkörös STAGING szabályokkal |
-    | `analytics` | dev és analytics k-anonimitás bemutatása, általánosított materialized view-k az elemző számára
+    | `analytics` | dev és analytics k-anonimitás bemutatása, általánosított materialized view-k az elemző számára |
 4. `docker compose exec web python init_scripts/seed_production.py --patients 500`
 (Mérés: `powershell -Command "Measure-Command { docker compose exec web python init_scripts/seed_production.py --patients 5000 | Out-Default }"`)
 5. böngésző: `http://127.0.0.1:8000/pipelines/` (belépés: `http://127.0.0.1:8000/admin/login/`)
@@ -57,7 +57,11 @@ A `migrate` a `web` konténer indulásakor lefut; a demóhoz nem kell hostos `ru
         - Itt létre tudunk hozni saját maszkolási stratégiát a kiválasztott maszkolási függvénnyel és, ha szükséges a megadott paraméterrel, amit később egy tábla egy oszlopán tudunk érvényesíteni
     - Django administration -> POLICIES -> Column policies
         - Itt tudjuk beállítani a kiválasztott tábla egy oszlopára a szabályunkat, meg kell adni a séma-, tábla-, oszlop nevet, a környezetet, ahol érvényesíteni szeretnénk a szabályt, az adatvédelmi kategóriát, a maszkolási stratégiát, STAGING környezet esetén a felhasználót ki kell választani, akire érvényes legyen a szabály és, hogy az alapértelmezetten végrehajtott validációs vizsgálaton felül kell-e statisztikai vagy értékátfedés vizsgálat
-        - Van lehetőség a program által generálni oszlop szabályokat is az adatbázisra, ezt a GENERATE SUGGESTION gomb megnyomásával lehet 
+        - STAGING + SUPPORT: dinamikus maszk a `public` sémán; STAGING + ANALYTICS: materialized view az `analytics` sémában (`public`-ot az analyst nem olvashatja)
+        - K-anonimitás csak DEVELOPMENT-en, vagy STAGING + ANALYTICS-en, `generalize_*` kezdetű anonimizáló függvények csak STAGING + ANALYTICS beállítással érvényes
+        - A beállított séma/tábla/oszlopnak léteznie kell a production adatbázisban
+        - Van lehetőség a program által generálni oszlop szabályokat is az adatbázisra, ezt a GENERATE SUGGESTION gomb megnyomásával lehet
+
 - Főoldal:
     - ETL indítása! gomb egyszeri megnyomásával elindítjuk a folyamatot, ezzel érvénybe lépnek a környezeteken beállított szabályok
     - Amikor az ETL folyamat befejezte a futását, akkor a Futások listában megjelenik, innen tovább tudunk lépni a validációs eredményeket összefoglaló nézetre, valamint a HTML riport nézetre
@@ -70,7 +74,7 @@ A `migrate` a `web` konténer indulásakor lefut; a demóhoz nem kell hostos `ru
 
 ## Tesztek
 
-`pytest -q`
+`docker compose exec web pytest -q`
 A jelenlegi tesztek a tiszta logikát és a webes nézeteket fedik, adatbázis-kapcsolat nélkül.
 DSN/ETL nincs a pytestben.
 
