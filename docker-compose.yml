@@ -2,9 +2,9 @@ services:
   admin_db:
     image: postgres:16
     environment:
-      - POSTGRES_USER=denes_pg
-      - POSTGRES_PASSWORD=denes12
-      - POSTGRES_DB=admin_db
+      POSTGRES_USER: ${ADMIN_DB_USER}
+      POSTGRES_PASSWORD: ${ADMIN_DB_PASSWORD}
+      POSTGRES_DB: ${ADMIN_DB_NAME}
     ports:
       - "5438:5432"
     volumes:
@@ -12,7 +12,7 @@ services:
     networks:
       - net_admin
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U denes_pg -d admin_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${ADMIN_DB_USER} -d ${ADMIN_DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -20,9 +20,9 @@ services:
   prod_db:
     image: postgres:16
     environment:
-      - POSTGRES_USER=user_pg
-      - POSTGRES_PASSWORD=password_pg
-      - POSTGRES_DB=prod
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PROD_DB}
     ports:
       - "5437:5432"
     volumes:
@@ -31,7 +31,7 @@ services:
     networks:
       - net_prod
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user_pg -d prod"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${PROD_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -40,9 +40,13 @@ services:
     image: registry.gitlab.com/dalibo/postgresql_anonymizer:3.0.5
     command: ["postgres", "-c", "shared_preload_libraries=anon", "-c", "anon.masking_policies=support,analytics"]
     environment:
-      - POSTGRES_USER=user_pg
-      - POSTGRES_PASSWORD=password_pg
-      - POSTGRES_DB=staging
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${STAGING_DB}
+      STAGING_SUPPORT_USER: ${STAGING_SUPPORT_USER}
+      STAGING_SUPPORT_PASSWORD: ${STAGING_SUPPORT_PASSWORD}
+      STAGING_ANALYST_USER: ${STAGING_ANALYST_USER}
+      STAGING_ANALYST_PASSWORD: ${STAGING_ANALYST_PASSWORD}
     ports:
       - "5435:5432"
     volumes:
@@ -51,7 +55,7 @@ services:
     networks:
       - net_staging
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user_pg -d staging"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${STAGING_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -59,9 +63,9 @@ services:
   dev_db:
     image: postgres:16
     environment:
-      - POSTGRES_USER=user_pg
-      - POSTGRES_PASSWORD=password_pg
-      - POSTGRES_DB=dev
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DEV_DB}
     ports:
       - "5436:5432"
     volumes:
@@ -69,7 +73,7 @@ services:
     networks:
       - net_dev
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user_pg -d dev"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${DEV_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -89,10 +93,10 @@ services:
       ADMIN_DB_PASSWORD: ${ADMIN_DB_PASSWORD}
       ADMIN_DB_HOST: admin_db
       ADMIN_DB_PORT: "5432"
-      PRODUCTION_DSN: postgresql://user_pg:password_pg@prod_db:5432/prod
-      STAGING_DSN: postgresql://user_pg:password_pg@staging_db:5432/staging
-      DEV_DSN: postgresql://user_pg:password_pg@dev_db:5432/dev
-      STAGING_ANALYST_DSN: postgresql://analyst_user:analyst_user@staging_db:5432/staging
+      PRODUCTION_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@prod_db:5432/${PROD_DB}
+      STAGING_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@staging_db:5432/${STAGING_DB}
+      DEV_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@dev_db:5432/${DEV_DB}
+      STAGING_ANALYST_DSN: postgresql://${STAGING_ANALYST_USER}:${STAGING_ANALYST_PASSWORD}@staging_db:5432/${STAGING_DB}
     depends_on:
       prod_db:
         condition: service_healthy
