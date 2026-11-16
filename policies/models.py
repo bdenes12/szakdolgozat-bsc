@@ -57,7 +57,7 @@ class ColumnPolicy(models.Model):
         SUPPORT = "SUPPORT", "Support"
         ANALYTICS = "ANALYTICS", "Analytics"
 
-    masking_policy = models.CharField(
+    role = models.CharField(
         max_length=50, choices=UserTypes.choices, blank=True, default="", verbose_name="Maszkolt szerepkör"
     )
     data_category = models.ForeignKey(
@@ -73,7 +73,7 @@ class ColumnPolicy(models.Model):
         verbose_name_plural = "Column policies"
         constraints = [
             models.UniqueConstraint(
-                fields=["schema_name", "table_name", "column_name", "target_environment", "masking_policy"],
+                fields=["schema_name", "table_name", "column_name", "target_environment", "role"],
                 name="unique_policy",
             )
         ]

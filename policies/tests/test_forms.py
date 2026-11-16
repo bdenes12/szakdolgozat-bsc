@@ -51,7 +51,7 @@ def _policy_form(environment, role, table, column):
             "table_name": table,
             "column_name": column,
             "target_environment": environment,
-            "masking_policy": role,
+            "role": role,
             "is_active": True,
         }
     )

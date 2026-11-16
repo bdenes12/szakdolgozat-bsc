@@ -51,7 +51,7 @@ class ColumnPolicyAdmin(ExtraButtonsMixin, admin.ModelAdmin):
         "target_environment",
         "data_category",
         "masking_strategy",
-        "masking_policy",
+        "role",
         "is_active",
         "value_overlap",
         ("statistical_mean", "max_mean_rel_error"),

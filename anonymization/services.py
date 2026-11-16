@@ -103,15 +103,15 @@ def apply_staging_labels():
 
                     label = "MASKED WITH FUNCTION " + mask_exp
 
-                    if not policy.masking_policy or policy.masking_policy == ColumnPolicy.UserTypes.ANALYTICS:
+                    if not policy.role or policy.role == ColumnPolicy.UserTypes.ANALYTICS:
                         skipped += 1
                         continue
 
                     cur.execute(
                         sql.SQL(
-                            "SECURITY LABEL FOR {masking_policy} ON COLUMN {schema_name}.{table_name}.{column_name} is {label} "
+                            "SECURITY LABEL FOR {role} ON COLUMN {schema_name}.{table_name}.{column_name} is {label} "
                         ).format(
-                            masking_policy=sql.Identifier(policy.masking_policy.lower()),
+                            role=sql.Identifier(policy.role.lower()),
                             schema_name=sql.Identifier(policy.schema_name),
                             table_name=sql.Identifier(policy.table_name),
                             column_name=sql.Identifier(policy.column_name),
@@ -210,7 +210,7 @@ def apply_analytics_views():
     active_staging_analytics_policies = (
         PolicyService()
         .get_active_policies(environment=ColumnPolicy.EnvironmentTypes.STAGING)
-        .filter(masking_policy=ColumnPolicy.UserTypes.ANALYTICS)
+        .filter(role=ColumnPolicy.UserTypes.ANALYTICS)
         .order_by("table_name")
     )
 

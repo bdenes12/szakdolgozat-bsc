@@ -360,7 +360,7 @@ class Command(BaseCommand):
                 table_name=table,
                 column_name=column,
                 target_environment=environment,
-                masking_policy=role,
+                role=role,
                 data_category=categories[category],
                 masking_strategy=strategies[strategy] if strategy else None,
                 quality_checks=checks,

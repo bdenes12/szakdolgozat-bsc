@@ -92,7 +92,7 @@ class ValidationService:
         policies = self.policy_service.get_active_policies(ColumnPolicy.EnvironmentTypes.DEVELOPMENT)
 
         analytics_policies = self.policy_service.get_active_policies(ColumnPolicy.EnvironmentTypes.STAGING).filter(
-            masking_policy=ColumnPolicy.UserTypes.ANALYTICS
+            role=ColumnPolicy.UserTypes.ANALYTICS
         )
 
         checks = [

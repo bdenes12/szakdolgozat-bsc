@@ -229,7 +229,7 @@ class SuggestionService:
                     table_name=policy_suggestion.table_name,
                     column_name=policy_suggestion.column_name,
                     target_environment=ColumnPolicy.EnvironmentTypes.DEVELOPMENT,
-                    masking_policy="",
+                    role="",
                     data_category=policy_suggestion.suggested_category,
                     masking_strategy=policy_suggestion.suggested_strategy,
                     quality_checks={"value_overlap": True},

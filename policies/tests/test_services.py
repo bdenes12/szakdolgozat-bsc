@@ -56,7 +56,7 @@ def test_accept_pending_creates_column_policy():
         table_name=s.table_name,
         column_name=s.column_name,
         target_environment=ColumnPolicy.EnvironmentTypes.DEVELOPMENT,
-        masking_policy="",
+        role="",
     ).exists()
 
 
@@ -72,7 +72,7 @@ def test_accept_technical_without_strategy():
             table_name=s.table_name,
             column_name=s.column_name,
             target_environment=ColumnPolicy.EnvironmentTypes.DEVELOPMENT,
-            masking_policy="",
+            role="",
         )
         .values_list("masking_strategy", flat=True)
         .first()

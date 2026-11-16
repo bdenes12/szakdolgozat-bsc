@@ -104,7 +104,7 @@ class ColumnPolicyForm(forms.ModelForm):
         max_entropy_rel_error = cleaned_data.get("max_entropy_rel_error")
 
         environment = cleaned_data.get("target_environment")
-        role = cleaned_data.get("masking_policy")
+        role = cleaned_data.get("role")
 
         k_anonymity_enabled = cleaned_data.get("k_anonymity")
 
