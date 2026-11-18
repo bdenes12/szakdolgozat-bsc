@@ -51,19 +51,13 @@ class PipelineService:
             pipeline_run.mark_completed()
             logger.info(f"Pipeline futás kész - pipeline_id: {pipeline_run.id}")
 
-            return pipeline_run
-
         except (psycopg2.OperationalError, SQLAlchemyOperationalError):
             logger.error(f"Adatbázis nem érhető el - pipeline_id: {pipeline_run.id}, lépés: {step}")
             pipeline_run.mark_failed(f"Adatbázis nem érhető el ({step})")
 
-            return pipeline_run
-
         except PipelineStepFailed:
             logger.error(f"Sikertelen áttöltés - pipeline_id: {pipeline_run.id}, lépés: {step}")
             pipeline_run.mark_failed(f"Sikertelen áttöltés ({step})")
-
-            return pipeline_run
 
         except Exception as e:
             logger.error(
@@ -71,4 +65,4 @@ class PipelineService:
             )
             pipeline_run.mark_failed(err_message=f"Sikertelen lépés: {step}")
 
-            return pipeline_run
+        return pipeline_run
