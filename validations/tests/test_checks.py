@@ -370,7 +370,7 @@ def test_k_anonymity_analytics_fail():
         fail_status=ValidationResult.ValidationResultStatuses.FAIL,
     )
 
-    with patch.object(KAnonymityCheck, "_class_sizes", side_effect=[[3, 2, 1, 4], [3, 2, 1, 4]]) as mock_sizes:
+    with patch.object(KAnonymityCheck, "_class_sizes", side_effect=[[3, 2, 1, 4], [3, 2, 1, 4]]):
         results = check.execute()
 
     result = results[0]

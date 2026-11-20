@@ -18,7 +18,7 @@ def pipeline_list_view(request):
 
     unresolved_alerts = Alert.objects.filter(is_resolved=False).count()
 
-    last_validation_run = ValidationRun.objects.order_by("-id").first()
+    last_validation_run = ValidationRun.objects.filter(status=ValidationRun.ValidationRunStatuses.COMPLETED).order_by("-id").first()
 
     pass_validation_status_count = ValidationResult.objects.filter(
         status=ValidationResult.ValidationResultStatuses.PASS, validation_run=last_validation_run
