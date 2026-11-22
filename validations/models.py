@@ -13,10 +13,10 @@ class ValidationRun(models.Model):
         COMPLETED = "COMPLETED", "Completed"
         FAILED = "FAILED", "Failed"
 
-    status = models.CharField(max_length=250, choices=ValidationRunStatuses.choices)
-    started_at = models.DateTimeField(auto_now_add=True)
-    finished_at = models.DateTimeField(null=True, blank=True)
-    error_message = models.TextField(blank=True)
+    status = models.CharField(max_length=250, choices=ValidationRunStatuses.choices, verbose_name="Státusz")
+    started_at = models.DateTimeField(auto_now_add=True, verbose_name="Indítás ideje")
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name="Befejezés ideje")
+    error_message = models.TextField(blank=True, verbose_name="Hibaüzenet")
 
     def mark_completed(self):
         self.status = self.ValidationRunStatuses.COMPLETED
@@ -33,9 +33,9 @@ class ValidationRun(models.Model):
 class ValidationResult(models.Model):
     validation_run = models.ForeignKey(ValidationRun, on_delete=models.CASCADE)
     column_policy = models.ForeignKey(ColumnPolicy, on_delete=models.SET_NULL, null=True, blank=True)
-    schema_name = models.CharField(max_length=250)
-    table_name = models.CharField(max_length=250)
-    column_name = models.CharField(max_length=250)
+    schema_name = models.CharField(max_length=250, verbose_name="Séma neve")
+    table_name = models.CharField(max_length=250, verbose_name="Tábla neve")
+    column_name = models.CharField(max_length=250, verbose_name="Oszlop neve")
 
     class CheckTypes(models.TextChoices):
         ROW_COUNT = "ROW_COUNT", "Row_count"
@@ -44,20 +44,20 @@ class ValidationResult(models.Model):
         STATISTICAL = "STATISTICAL", "Statistical"
         K_ANONYMITY = "K_ANONYMITY", "K_anonymity"
 
-    check_type = models.CharField(max_length=250, choices=CheckTypes.choices)
+    check_type = models.CharField(max_length=250, choices=CheckTypes.choices, verbose_name="Ellenőrzés típusa")
 
     class ValidationResultStatuses(models.TextChoices):
         PASS = "PASS", "Pass"
         WARNING = "WARNING", "Warning"
         FAIL = "FAIL", "Fail"
 
-    status = models.CharField(max_length=250, choices=ValidationResultStatuses.choices)
-    metrics = models.JSONField(default=dict)
-    applied_thresholds = models.JSONField(default=dict)
-    message = models.TextField(blank=True)
+    status = models.CharField(max_length=250, choices=ValidationResultStatuses.choices, verbose_name="Státusz")
+    metrics = models.JSONField(default=dict, verbose_name="Metrikák")
+    applied_thresholds = models.JSONField(default=dict, verbose_name="Alkalmazott küszöbértékek")
+    message = models.TextField(blank=True, verbose_name="Üzenet")
 
 
 class ValidationReport(models.Model):
     validation_run = models.ForeignKey(ValidationRun, on_delete=models.CASCADE)
-    generated_at = models.DateTimeField(auto_now_add=True)
-    html_content = models.TextField(blank=True)
+    generated_at = models.DateTimeField(auto_now_add=True, verbose_name="Létrehozás ideje")
+    html_content = models.TextField(blank=True, verbose_name="HTML tartalom")

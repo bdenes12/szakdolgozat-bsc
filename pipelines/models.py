@@ -9,10 +9,10 @@ class PipelineRun(models.Model):
         COMPLETED = "COMPLETED", "Completed"
         FAILED = "FAILED", "Failed"
 
-    status = models.CharField(max_length=250, choices=RunStatuses.choices)
-    started_at = models.DateTimeField(auto_now_add=True)
-    finished_at = models.DateTimeField(null=True, blank=True)
-    error_message = models.TextField(blank=True)
+    status = models.CharField(max_length=250, choices=RunStatuses.choices, verbose_name="Státusz")
+    started_at = models.DateTimeField(auto_now_add=True, verbose_name="Indítás ideje")
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name="Befejezés ideje")
+    error_message = models.TextField(blank=True, verbose_name="Hibaüzenet")
 
     def mark_completed(self):
         self.status = self.RunStatuses.COMPLETED

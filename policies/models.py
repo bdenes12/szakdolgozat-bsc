@@ -3,12 +3,12 @@ from django.db import models
 
 
 class DataCategory(models.Model):
-    name = models.CharField(max_length=250, unique=True)
-    description = models.TextField(blank=True)
+    name = models.CharField(max_length=250, unique=True, verbose_name="Név")
+    description = models.TextField(blank=True, verbose_name="Leírása")
     maximum_overlap = models.DecimalField(
-        max_digits=5, decimal_places=2, validators=[MinValueValidator(0.00), MaxValueValidator(100.00)]
+        max_digits=5, decimal_places=2, validators=[MinValueValidator(0.00), MaxValueValidator(100.00)], verbose_name="Maximális átfedés (%)"
     )
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, verbose_name="Aktív")
 
     class Meta:
         verbose_name_plural = "Data categories"
@@ -18,20 +18,20 @@ class DataCategory(models.Model):
 
 
 class AnonFunction(models.Model):
-    name = models.CharField(max_length=250, unique=True)
-    function = models.CharField(max_length=250, default="")
-    is_column_name_parameter = models.BooleanField(default=True)
-    description = models.TextField(blank=True)
+    name = models.CharField(max_length=250, unique=True, verbose_name="Név")
+    function = models.CharField(max_length=250, default="", verbose_name="Függvény")
+    is_column_name_parameter = models.BooleanField(default=True, verbose_name="Oszlopnév paraméter")
+    description = models.TextField(blank=True, verbose_name="Leírása")
 
     def __str__(self):
         return f"{self.name} - {self.description}"
 
 
 class MaskingStrategy(models.Model):
-    name = models.CharField(max_length=250, unique=True)
-    description = models.TextField(blank=True)
-    parameters = models.JSONField(default=list, blank=True)
-    anon_function = models.ForeignKey(AnonFunction, on_delete=models.CASCADE)
+    name = models.CharField(max_length=250, unique=True, verbose_name="Név")
+    description = models.TextField(blank=True, verbose_name="Leírása")
+    parameters = models.JSONField(default=list, blank=True, verbose_name="Paraméterek")
+    anon_function = models.ForeignKey(AnonFunction, on_delete=models.CASCADE, verbose_name="Anonimizáló függvény")
 
     class Meta:
         verbose_name_plural = "Masking strategies"
