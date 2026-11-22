@@ -26,7 +26,6 @@ A rendszer alapja egy többlépcsős (production, staging, dev) ETL folyamat. A 
     | `staging` | az `alap` kiegészítve SUPPORT és ANALYTICS szerepkörös STAGING szabályokkal |
     | `analytics` | dev és analytics k-anonimitás bemutatása, általánosított materialized view-k az elemző számára |
 4. `docker compose exec web python init_scripts/seed_production.py --patients 500`
-(Mérés: `powershell -Command "Measure-Command { docker compose exec web python init_scripts/seed_production.py --patients 5000 | Out-Default }"`)
 5. böngésző: `http://127.0.0.1:8000/pipelines/` (belépés: `http://127.0.0.1:8000/admin/login/`)
 
 A `migrate` a `web` konténer indulásakor lefut; a demóhoz nem kell hostos `runserver`.

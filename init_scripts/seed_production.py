@@ -30,8 +30,8 @@ faker = Faker("hu_HU")
 
 PRODUCTION_DSN = os.getenv("PRODUCTION_DSN")
 
-# faker.seed_instance(12)
-# random.seed(12)
+faker.seed_instance(12)
+random.seed(12)
 
 
 def truncate_prod_database_data():

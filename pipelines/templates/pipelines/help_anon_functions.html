@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Maszkoló függvények paraméterei</h1>
+<p class="dashboard-hint">
+    Vissza a <a href="{% url 'help' %}">súgóra</a>.
+    A <a href="{% url 'admin:policies_maskingstrategy_changelist' %}">Masking strategies</a>
+    paramétermezője JSON-lista. Azt, hogy a paraméter tartalmazza-e az oszlopnevet a rendszer adja, ide csak a többi argumentum kerül.
+    Példa: <code>noise</code>: <code>[0.15]</code>; <code>partial</code>: <code>[2, "****", 2]</code>; paraméter nélküli függvény: <code>[]</code>.
+</p>
+
+<section class="help-section">
+    <div class="table-scroll">
+        <table class="runs-table">
+            <thead>
+                <tr>
+                    <th>Függvény</th>
+                    <th>Leírás</th>
+                    <th>Paraméterek</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>fake_address</code></td>
+                    <td>Hamis cím.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_city</code></td>
+                    <td>Hamis város.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_company</code></td>
+                    <td>Hamis cégnév.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_country</code></td>
+                    <td>Hamis ország.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_email</code></td>
+                    <td>Teljesen hamis e-mail.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_first_name</code></td>
+                    <td>Hamis keresztnév.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_iban</code></td>
+                    <td>Hamis IBAN.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_last_name</code></td>
+                    <td>Hamis vezetéknév.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_postcode</code></td>
+                    <td>Hamis irányítószám.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>fake_siret</code></td>
+                    <td>Hamis SIRET.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_bic</code></td>
+                    <td>Hamis BIC.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_building_number</code></td>
+                    <td>Hamis házszám.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_cell_number</code></td>
+                    <td>Hamis mobilszám.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_city_name</code></td>
+                    <td>Hamis városnév.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_company_name</code></td>
+                    <td>Hamis cégnév.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_country_code</code></td>
+                    <td>Hamis országkód.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_country_name</code></td>
+                    <td>Hamis országnév.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_credit_card_number</code></td>
+                    <td>Hamis bankkártyaszám.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_first_name</code></td>
+                    <td>Hamis keresztnév (dummy).</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_health_insurance_code</code></td>
+                    <td>Hamis TAJ-szerű kód.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_isin</code></td>
+                    <td>Hamis ISIN.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_last_name</code></td>
+                    <td>Hamis vezetéknév (dummy).</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_name</code></td>
+                    <td>Hamis teljes név.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_phone_number</code></td>
+                    <td>Hamis telefonszám.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_post_code</code></td>
+                    <td>Hamis irányítószám (dummy).</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_safe_email</code></td>
+                    <td>Hamis e-mail.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_street_name</code></td>
+                    <td>Hamis utcanév.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_username</code></td>
+                    <td>Hamis felhasználónév.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_uuidv4</code></td>
+                    <td>Hamis UUID.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_zip_code</code></td>
+                    <td>Hamis ZIP.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_first_name_locale</code></td>
+                    <td>Hamis keresztnév, locale a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>locale</code>: <code>text</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_last_name_locale</code></td>
+                    <td>Hamis vezetéknév, locale a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>locale</code>: <code>text</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_phone_number_locale</code></td>
+                    <td>Hamis telefon, locale a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>locale</code>: <code>text</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_city_name_locale</code></td>
+                    <td>Hamis város, locale a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>locale</code>: <code>text</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dummy_post_code_locale</code></td>
+                    <td>Hamis irányítószám, locale a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>locale</code>: <code>text</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_date</code></td>
+                    <td>Véletlen időbélyeg.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_id</code></td>
+                    <td>Véletlen bigint azonosító.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_phone</code></td>
+                    <td>Véletlen telefonszám.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_phone_prefix</code></td>
+                    <td>Véletlen telefon, prefix a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>prefix</code>: <code>text</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_phone_with_format</code></td>
+                    <td>Véletlen telefon, formátum a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>format</code>: <code>text</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_string</code></td>
+                    <td>Véletlen szöveg, hossz a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>l</code>: <code>integer</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_string_range</code></td>
+                    <td>Véletlen szöveg, hossztartomány a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>r</code>: <code>int4range</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_int_between</code></td>
+                    <td>Véletlen egész, tartomány a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>start</code>: <code>integer</code> (kötelező)</li>
+                            <li><code>stop</code>: <code>integer</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_bigint_between</code></td>
+                    <td>Véletlen bigint, tartomány a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>start</code>: <code>bigint</code> (kötelező)</li>
+                            <li><code>stop</code>: <code>bigint</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_date_between</code></td>
+                    <td>Véletlen dátum, tartomány a parameters-ben.</td>
+                    <td>
+                        <ul>
+                            <li><code>date_start</code>: <code>timestamptz</code> (kötelező)</li>
+                            <li><code>date_end</code>: <code>timestamptz</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_zip</code></td>
+                    <td>Véletlen ZIP.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>random_hash</code></td>
+                    <td>Hash az oszlop értékéből.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>lorem_ipsum</code></td>
+                    <td>Helykitöltő szöveg.</td>
+                    <td>
+                        <ul>
+                            <li><code>paragraphs</code>: <code>integer</code> (opcionális)</li>
+                            <li><code>words</code>: <code>integer</code> (opcionális)</li>
+                            <li><code>characters</code>: <code>integer</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>noise</code></td>
+                    <td>Numerikus zaj; a parameters egy arány, pl. [0.15].</td>
+                    <td>
+                        <ul>
+                            <li><code>ratio</code>: <code>double precision</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>dnoise</code></td>
+                    <td>Dátumzaj; a parameters egy intervallum, pl. [&quot;365 days&quot;].</td>
+                    <td>
+                        <ul>
+                            <li><code>noise_range</code>: <code>interval</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>partial</code></td>
+                    <td>Részleges maszk; parameters pl. [2, &quot;****&quot;, 2].</td>
+                    <td>
+                        <ul>
+                            <li><code>prefix</code>: <code>integer</code> (kötelező)</li>
+                            <li><code>padding</code>: <code>text</code> (kötelező)</li>
+                            <li><code>suffix</code>: <code>integer</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>partial_email</code></td>
+                    <td>Részleges e-mail; parameters [].</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>digest</code></td>
+                    <td>Digest; parameters pl. [&quot;mysalt&quot;, &quot;sha256&quot;].</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (kötelező)</li>
+                            <li><code>algorithm</code>: <code>text</code> (kötelező)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>hash</code></td>
+                    <td>Hash az oszlopból.</td>
+                    <td>
+                        üres lista: <code>[]</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>generalize_daterange</code></td>
+                    <td>Dátum általánosítás; parameters opcionális step.</td>
+                    <td>
+                        <ul>
+                            <li><code>step</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>generalize_int4range</code></td>
+                    <td>Egész általánosítás.</td>
+                    <td>
+                        <ul>
+                            <li><code>step</code>: <code>integer</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>generalize_int8range</code></td>
+                    <td>Bigint általánosítás.</td>
+                    <td>
+                        <ul>
+                            <li><code>step</code>: <code>bigint</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>generalize_numrange</code></td>
+                    <td>Numeric általánosítás.</td>
+                    <td>
+                        <ul>
+                            <li><code>step</code>: <code>integer</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>generalize_tsrange</code></td>
+                    <td>Timestamp általánosítás.</td>
+                    <td>
+                        <ul>
+                            <li><code>step</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>generalize_tstzrange</code></td>
+                    <td>Timestamptz általánosítás.</td>
+                    <td>
+                        <ul>
+                            <li><code>step</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>pseudo_city</code></td>
+                    <td>Állandó hamis város a seedből.</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>pseudo_company</code></td>
+                    <td>Állandó hamis cég a seedből.</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>pseudo_country</code></td>
+                    <td>Állandó hamis ország a seedből.</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>pseudo_email</code></td>
+                    <td>Állandó hamis e-mail a seedből.</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>pseudo_first_name</code></td>
+                    <td>Állandó hamis keresztnév a seedből.</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>pseudo_iban</code></td>
+                    <td>Állandó hamis IBAN a seedből.</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>pseudo_last_name</code></td>
+                    <td>Állandó hamis vezetéknév a seedből.</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>pseudo_siret</code></td>
+                    <td>Állandó hamis SIRET a seedből.</td>
+                    <td>
+                        <ul>
+                            <li><code>salt</code>: <code>text</code> (opcionális)</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock %}

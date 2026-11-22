@@ -107,3 +107,7 @@ def pipeline_report(request, my_id):
 @login_required
 def help_view(request):
     return render(request, "pipelines/help.html")
+
+@login_required
+def help_anon_functions_view(request):
+    return render(request, "pipelines/help_anon_functions.html")
