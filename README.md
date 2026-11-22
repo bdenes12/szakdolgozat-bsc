@@ -74,7 +74,7 @@ A `migrate` a `web` konténer indulásakor lefut; a demóhoz nem kell hostos `ru
 ## Tesztek
 
 `docker compose exec web pytest -q`
-A jelenlegi tesztek a tiszta logikát és a webes nézeteket fedik, adatbázis-kapcsolat nélkül.
+A jelenlegi tesztek a tiszta logikát és a webes nézeteket fedik, a négy Compose-Postgres nélkül.
 DSN/ETL nincs a pytestben.
 
 ## Projektstruktúra 
