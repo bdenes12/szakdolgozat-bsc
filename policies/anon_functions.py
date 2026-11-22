@@ -1,7 +1,3 @@
-# Szűrt PostgreSQL Anonymizer függvények a seedhez.
-# Forrás: anon_functions_mask.txt
-# is_column_name_parameter: az első SQL-argumentum a maszkolandó oszlop értéke-e.
-
 ANON_FUNCTIONS = {
     "fake_address": {
         "anon_function": "anon.fake_address",
